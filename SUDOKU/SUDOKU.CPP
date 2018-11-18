@@ -1,9 +1,7 @@
 //INCLUDED HEADER FILES
 /******************************************************************/
 #include<fstream>
-#include<conio>
-#include<dos>
-#include<ctype>
+#include<curses.h>
 #include<cmath>
 #include<cstdio>
 #include<cstdlib>
@@ -375,7 +373,7 @@ void continuegame(int a[m][m],int w[m][m],int &level)
 //MAIN FUNCTION CALLING OTHER FUNCTIONS OF THE PROGRAM
 /******************************************************************/
 /******************************************************************/
-void main()
+int main()
 {
 	fstream f;
 	player pl;
@@ -411,6 +409,7 @@ void main()
 			case '0' : exit(0);
 		}
 	}
+	return 0;
 }
 /******************************************************************/
 //FUNCTION TO GIVE INSTRUCTIONS TO THE USER
