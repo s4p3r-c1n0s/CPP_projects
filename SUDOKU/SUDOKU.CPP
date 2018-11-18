@@ -81,7 +81,6 @@ class sudoku
 /******************************************************************/
 void sudoku::input(int sz)
 {
-	clrscr();
 	sno=sz;
 	std::cout<<"Serial No.:"<<sno<<std::endl;
 	set_level(level);
@@ -117,7 +116,6 @@ void writefile(fstream &f)
 /******************************************************************/
 void searchlevel(fstream &f)
 {
-	clrscr();
 	int l;
 	sudoku su;
 	std::cout<<"Enter ";
@@ -126,7 +124,6 @@ void searchlevel(fstream &f)
 	while(f.read((char*)(&su),sizeof(su)))
 		if(su.r_level()==l)
 		{
-			clrscr();
 			su.output();
 			std::cout<<"\nNEXT";
 			getch();
@@ -143,7 +140,6 @@ void readfile(fstream &f)
 	f.open("sudoku.dat",std::ios::binary|std::ios::in);
 	while(f.read((char*)(&su),sizeof(su)))
 	{
-		clrscr();
 		su.output();
 		std::cout<<"\nNEXT";
 		getch();
@@ -156,7 +152,6 @@ void readfile(fstream &f)
 /******************************************************************/
 void editfile(fstream &f)
 {
-	clrscr();
 	int s_no;
 	sudoku su;
 	f.open("sudoku.dat",std::ios::binary|std::ios::in|std::ios::out);
@@ -247,7 +242,6 @@ class player
 /******************************************************************/
 void player::input(int a[m][m],int w[m][m],int level)
 {
-	clrscr();
 	std::cout<<"Enter Your name : ";
 	gets(name);
 	for(int i=0;i<strlen(name);i++)
@@ -275,7 +269,6 @@ void writeplayer(fstream &f,int a[m][m],int w[m][m],int level)
 /******************************************************************/
 void show(fstream &f,int i,int n=v)
 {
-	clrscr();
 	player pl;
 	f.open("player.dat",std::ios::in|std::ios::binary);
 	table(n);
@@ -384,7 +377,6 @@ int main()
 	intro();
 	for(;;)
 	{
-		clrscr();
 		std::cout<<"1) PLAY SUDOKU\n\n2) HIGHSCORES\n\n";
 		std::cout<<"3) CONTINUE\n\n4) SET LEVEL\n\n";
 		std::cout<<"5) INSTRUCTIONS\n\n6) Write File\n\n";
@@ -417,7 +409,6 @@ int main()
 /******************************************************************/
 void instructions()
 {
-	clrscr();
 	gotoxy(20,20);
 	std::cout<<"I  N  S  T  R  U  C  T  I  O  N  S\n\n\n";
 	std::cout<<"\nFill the Grid so that every row, column & 3x3 box ";
@@ -443,7 +434,6 @@ void endgame(int a[m][m],int w[m][m],int level)
 			if(!(w[i][j]>=1 && w[i][j]<=9))
 				w[i][j]=0;
 		}
-	clrscr();
 	gotoxy(25,20);
 	std::cout<<"Y O U R   F I N A L   A N S W E R";
 	display(w);
@@ -452,7 +442,6 @@ void endgame(int a[m][m],int w[m][m],int level)
 	{
 		solve(a,s);
 	}while(verify(s)!=0 && sumer(s)!=0);
-	clrscr();
 	gotoxy(27,20);
 	std::cout<<"S   O   L   U   T   I   O   N";
 	display(s);
@@ -480,7 +469,6 @@ void set_level(int &level)
 /******************************************************************/
 void play(int a[m][m],int w[m][m],int level)
 {
-	clrscr();
 	char ch,c='A',e;
 	int p=30,n,x,y;
 	for(int i=0;i<m;i++)
@@ -961,7 +949,6 @@ void box(int p)
 /******************************************************************/
 void intro()
 {
-	clrscr();
 	char c=196;
 	int y,x1,x2,r;
 	for(r=20;r<=23;r++)
@@ -1198,7 +1185,6 @@ void display2(int a[m][m])
 }
 void sudoku::input2(int sz)
 {
-	clrscr();
 	sno=sz;
 	std::cout<<"Serial No.:"<<sno<<std::endl;
 	randomize();
