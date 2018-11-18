@@ -1,13 +1,13 @@
 //INCLUDED HEADER FILES
 /******************************************************************/
-#include<fstream.h>
-#include<conio.h>
-#include<dos.h>
-#include<ctype.h>
-#include<math.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
+#include<fstream>
+#include<conio>
+#include<dos>
+#include<ctype>
+#include<cmath>
+#include<cstdio>
+#include<cstdlib>
+#include<cstring>
 /******************************************************************/
 const int m=9,v=22;
 /******************************************************************/
@@ -51,8 +51,8 @@ class sudoku
 	void output()
 	{
 		int s[m][m];
-		cout<<"Serial No:"<<sno;
-		cout<<"\nLevel:"<<level;
+		std::cout<<"Serial No:"<<sno;
+		std::cout<<"\nLevel:"<<level;
 		display(a);
 	}
 	/******************************************************************/
@@ -84,9 +84,9 @@ void sudoku::input(int sz)
 {
 	clrscr();
 	sno=sz;
-	cout<<"Serial No.:"<<sno<<endl;
+	std::cout<<"Serial No.:"<<sno<<endl;
 	set_level(level);
-	cout<<"Enter SU-DO-KU:";
+	std::cout<<"Enter SU-DO-KU:";
 	enterin(a);
 }
 /******************************************************************/
@@ -105,9 +105,9 @@ void writefile(fstream &f)
 	{
 		su.input(sz+1);
 		f.write((char*)(&su),sizeof(su));
-		cout<<"\nMORE[Y,N]:";
+		std::cout<<"\nMORE[Y,N]:";
 		ch=toupper(getch());
-		cout<<ch;
+		std::cout<<ch;
 	}
 	f.close();
 	return;
@@ -121,7 +121,7 @@ void searchlevel(fstream &f)
 	clrscr();
 	int l;
 	sudoku su;
-	cout<<"Enter ";
+	std::cout<<"Enter ";
 	set_level(l);
 	f.open("sudoku.dat",ios::binary|ios::in);
 	while(f.read((char*)(&su),sizeof(su)))
@@ -129,7 +129,7 @@ void searchlevel(fstream &f)
 		{
 			clrscr();
 			su.output();
-			cout<<"\nNEXT";
+			std::cout<<"\nNEXT";
 			getch();
 		}
 	f.close();
@@ -146,7 +146,7 @@ void readfile(fstream &f)
 	{
 		clrscr();
 		su.output();
-		cout<<"\nNEXT";
+		std::cout<<"\nNEXT";
 		getch();
 	}
 	f.close();
@@ -164,11 +164,11 @@ void editfile(fstream &f)
 	f.seekg(0,ios::end);
 	long sz=f.tellg()/sizeof(su);
 	f.seekg(0);
-	cout<<"Enter Serial no to Edit : ";
-	cin>>s_no;
+	std::cout<<"Enter Serial no to Edit : ";
+	std::cin>>s_no;
 	if(s_no<1 || s_no>sz)
 	{
-		cout<<"No such record exists";
+		std::cout<<"No such record exists";
 		getch();
 	}
 	else
@@ -176,7 +176,7 @@ void editfile(fstream &f)
 		f.seekg((s_no-1)*sizeof(su));
 		f.read((char*)(&su),sizeof(su));
 		su.output();
-		cout<<"\nPress Enter to Edit........";
+		std::cout<<"\nPress Enter to Edit........";
 		su.input(s_no);
 		f.seekp((s_no-1)*sizeof(su));
 		f.write((char*)(&su),sizeof(su));
@@ -229,11 +229,11 @@ class player
 	void output(int i,int j)
 	{
 		gotoxy(2,(4+(j*2)));
-		cout<<1+j+(i*v)<<'.';
+		std::cout<<1+j+(i*v)<<'.';
 		gotoxy(6,(4+(j*2)));
 		puts(name);
 		gotoxy(61,(4+(j*2)));
-		cout<<scr;
+		std::cout<<scr;
 	}
 	/******************************************************************/
 	//FUNCTION TO RETURN THE SCORE OF THE PLAYER
@@ -249,14 +249,14 @@ class player
 void player::input(int a[m][m],int w[m][m],int level)
 {
 	clrscr();
-	cout<<"Enter Your name : ";
+	std::cout<<"Enter Your name : ";
 	gets(name);
 	for(int i=0;i<strlen(name);i++)
 		name[i]=toupper(name[i]);
 	gotoxy(19,1);
 	puts(name);
 	scr=score(a,w,level);
-	cout<<"Your SCORE : "<<scr;
+	std::cout<<"Your SCORE : "<<scr;
 	getch();
 }
 /******************************************************************/
@@ -386,12 +386,12 @@ void main()
 	for(;;)
 	{
 		clrscr();
-		cout<<"1) PLAY SUDOKU\n\n2) HIGHSCORES\n\n";
-		cout<<"3) CONTINUE\n\n4) SET LEVEL\n\n";
-		cout<<"5) INSTRUCTIONS\n\n6) Write File\n\n";
-		cout<<"7) Read File\n\n8) Search File";
-		cout<<"\n\n9) Edit File\n\n0) Exit";
-		cout<<"\n\n\n\nE n t e r   C h o i c e : ";
+		std::cout<<"1) PLAY SUDOKU\n\n2) HIGHSCORES\n\n";
+		std::cout<<"3) CONTINUE\n\n4) SET LEVEL\n\n";
+		std::cout<<"5) INSTRUCTIONS\n\n6) Write File\n\n";
+		std::cout<<"7) Read File\n\n8) Search File";
+		std::cout<<"\n\n9) Edit File\n\n0) Exit";
+		std::cout<<"\n\n\n\nE n t e r   C h o i c e : ";
 		u=getch();
 		while(!(u>='0'&& u<='9'))
 			u=getch();
@@ -402,7 +402,7 @@ void main()
 			case '2' : readplayer(f);break;
 			case '3' : continuegame(a,w,l);
 					   play(a,w,l);break;
-			case '4' : cout<<"\nEnter ";set_level(l);break;
+			case '4' : std::cout<<"\nEnter ";set_level(l);break;
 			case '5' : instructions();break;
 			case '6' : write(f);break; 		       	//NEW FUNC
 			case '7' : readfile(f);break;
@@ -419,9 +419,9 @@ void instructions()
 {
 	clrscr();
 	gotoxy(20,20);
-	cout<<"I  N  S  T  R  U  C  T  I  O  N  S\n\n\n";
-	cout<<"\nFill the Grid so that every row, column & 3x3 box ";
-	cout<<"contains digits 1-9\n\nEach puzzle has 1 correct solution";
+	std::cout<<"I  N  S  T  R  U  C  T  I  O  N  S\n\n\n";
+	std::cout<<"\nFill the Grid so that every row, column & 3x3 box ";
+	std::cout<<"contains digits 1-9\n\nEach puzzle has 1 correct solution";
 	getch();
 }
 /******************************************************************/
@@ -445,7 +445,7 @@ void endgame(int a[m][m],int w[m][m],int level)
 		}
 	clrscr();
 	gotoxy(25,20);
-	cout<<"Y O U R   F I N A L   A N S W E R";
+	std::cout<<"Y O U R   F I N A L   A N S W E R";
 	display(w);
 	delay(1000);
 	do
@@ -454,7 +454,7 @@ void endgame(int a[m][m],int w[m][m],int level)
 	}while(verify(s)!=0 && sumer(s)!=0);
 	clrscr();
 	gotoxy(27,20);
-	cout<<"S   O   L   U   T   I   O   N";
+	std::cout<<"S   O   L   U   T   I   O   N";
 	display(s);
 	getch();
 	delay(1000);
@@ -467,12 +467,12 @@ void endgame(int a[m][m],int w[m][m],int level)
 /******************************************************************/
 void set_level(int &level)
 {
-	cout<<"Level : ";
-	cin>>level;
+	std::cout<<"Level : ";
+	std::cin>>level;
 	while(level<1 || level>5)
 	{
-		cout<<"Level[1-5] : ";
-		cin>>level;
+		std::cout<<"Level[1-5] : ";
+		std::cin>>level;
 	}
 }
 /******************************************************************/
@@ -496,11 +496,11 @@ void play(int a[m][m],int w[m][m],int level)
 				e=c;
 			}
 	display(w);
-	gotoxy(1,50);cout<<"END the GAME [~]";
-	gotoxy(1,4);cout<<"LEVEL : ";
-	for(int u=0;u<level;u++)cout<<"* ";
-	gotoxy(60,50);cout<<"CONTINUE later [0]";
-	gotoxy(1,1);cout<<"Enter CHOICE : ";
+	gotoxy(1,50);std::cout<<"END the GAME [~]";
+	gotoxy(1,4);std::cout<<"LEVEL : ";
+	for(int u=0;u<level;u++)std::cout<<"* ";
+	gotoxy(60,50);std::cout<<"CONTINUE later [0]";
+	gotoxy(1,1);std::cout<<"Enter CHOICE : ";
 	for(;;)
 	{
 		ch=getch();
@@ -632,9 +632,9 @@ void enterin(int a[m][m])
 			c=getch();
 			a[i][j]=convert(c);
 			if(a[i][j]>=1 && a[i][j]<=9)
-				cout<<a[i][j];
+				std::cout<<a[i][j];
 			else
-				cout<<' ';
+				std::cout<<' ';
 		}
 }
 /******************************************************************/
@@ -666,7 +666,7 @@ void display(int a[m][m])
 				}
 			}
 			else if(a[i][j]==0)
-				cout<<' ';
+				std::cout<<' ';
 			else
 			{
 				textcolor(WHITE);
@@ -706,10 +706,10 @@ void logic(int a[m][m], int z[m*m][m])
 					/*
 					//Calculational display unit
 					{
-					cout<<"("<<i<<j<<")";
+					std::cout<<"("<<i<<j<<")";
 					for(y=0;y<m;y++)
-					cout<<z[(m*i)+j][y];
-					cout<<"<"<<c[(m*i)+j]<<">";
+					std::cout<<z[(m*i)+j][y];
+					std::cout<<"<"<<c[(m*i)+j]<<">";
 					}
 
 					 */
@@ -986,15 +986,15 @@ void intro()
 				delay(10);
 				prt(x2,y,c);
 			}
-	gotoxy(33,23);cout<<"| S U D O K U |";
+	gotoxy(33,23);std::cout<<"| S U D O K U |";
 	delay(1000);
-	gotoxy(28,20);cout<<"C + +   P R O J E C T   O N";
-	gotoxy(33,22);cout<<"---------------";
-	gotoxy(33,24);cout<<"---------------";
+	gotoxy(28,20);std::cout<<"C + +   P R O J E C T   O N";
+	gotoxy(33,22);std::cout<<"---------------";
+	gotoxy(33,24);std::cout<<"---------------";
 	delay(1000);
-	gotoxy(32,31);cout<<"B Y   :   U M A N G";
+	gotoxy(32,31);std::cout<<"B Y   :   U M A N G";
 	delay(1000);
-	gotoxy(32,33);cout<<"Btech : 1st SEM";
+	gotoxy(32,33);std::cout<<"Btech : 1st SEM";
 	getch();
 }
 /******************************************************************/
@@ -1023,7 +1023,7 @@ int convert(char c)
 /******************************************************************/
 void prt(int i,int j,char c)
 {
-	gotoxy(j,i);cout<<c;
+	gotoxy(j,i);std::cout<<c;
 }
 /******************************************************************/
 //FUNCTION TO CREATE TABLE FOR DISPLAYING SCORES AND PLAYER NAMES
@@ -1031,7 +1031,7 @@ void prt(int i,int j,char c)
 void table(int n)
 {
 	gotoxy(28,2);
-	cout<<"NAME\t\t\t\t\tSCORE";
+	std::cout<<"NAME\t\t\t\t\tSCORE";
 	char co1=218,co2=191,co3=192,co4=217;
 	char hr=196,vr=179,cr=197;
 	char t1=194,t2=193,t3=195,t4=180;
@@ -1062,7 +1062,7 @@ void table(int n)
 	prt(n*2+3,80,co4);
 	prt(n*2+3,1,co3);
 	gotoxy(65,49);
-	cout<<"Continue........";
+	std::cout<<"Continue........";
 }
 /**********************************************************************/
 /***************************NEW FUNCTIONS******************************/
@@ -1140,7 +1140,7 @@ void create(int a[m][m])
 	while(verify(s)==0 && sumer(s)==0);
 	a[i][j]=u;
 	display2(a);
-	cout<<"\nCOMPLETED!!";
+	std::cout<<"\nCOMPLETED!!";
 }
 void write(fstream &f)
 {
@@ -1155,9 +1155,9 @@ void write(fstream &f)
 	{
 		su.input2(sz+1);
 		f.write((char*)(&su),sizeof(su));
-		cout<<"\nMORE[Y,N]:";
+		std::cout<<"\nMORE[Y,N]:";
 		ch=toupper(getch());
-		cout<<ch;
+		std::cout<<ch;
 	}
 	f.close();
 	return;
@@ -1187,7 +1187,7 @@ void display2(int a[m][m])
 				}
 			}
 			else if(a[i][j]==0)
-				cout<<' ';
+				std::cout<<' ';
 			else
 			{
 				textcolor(WHITE);
@@ -1200,11 +1200,11 @@ void sudoku::input2(int sz)
 {
 	clrscr();
 	sno=sz;
-	cout<<"Serial No.:"<<sno<<endl;
+	std::cout<<"Serial No.:"<<sno<<endl;
 	randomize();
 	level=random(5)+1;
-	cout<<"Level:"<<level;
-	cout<<"\nSU-DO-KU:";
+	std::cout<<"Level:"<<level;
+	std::cout<<"\nSU-DO-KU:";
 	create(a);
 }
 
