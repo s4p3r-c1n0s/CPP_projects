@@ -285,7 +285,7 @@ void show(std::fstream &f,int i,int n=v)
 /******************************************************************/
 //FUNCTION TO RETURN THE NO. OF RECORDS STORED IN FILE "player.dat"
 /******************************************************************/
-long filesize(std::ftream &f)
+long filesize(std::fstream &f)
 {
 	f.open("player.dat",std::ios::in|std::ios::binary);
 	f.seekg(0,std::ios::end);
@@ -298,7 +298,8 @@ long filesize(std::ftream &f)
 /******************************************************************/
 void readplayer(std::fstream &f)
 {
-	for(int i=0;i<filesize(f)/v;i++)
+	int i;
+	for(i=0;i<filesize(f)/v;i++)
 		show(f,i);
 	if(filesize(f)%v!=0)
 		show(f,i,filesize(f)%v);
@@ -373,7 +374,7 @@ int main()
 	player pl;
 	int s[m][m],w[m][m],l=1,a[m][m];
 	char u;
-	textcolor(WHITE);
+	//textcolor(WHITE);
 	intro();
 	for(;;)
 	{
@@ -494,7 +495,7 @@ void play(int a[m][m],int w[m][m],int level)
 		ch=getch();
 		if(ch=='~' || ch=='0')
 		{
-			textcolor(WHITE);
+			//textcolor(WHITE);
 			switch(ch)
 			{
 				case '0' : savegame(a,w,level);break;
@@ -515,8 +516,8 @@ void play(int a[m][m],int w[m][m],int level)
 						if(c>='1' && c<='9')
 						{
 							w[i][j]=c;
-							textcolor(RED);
-							cprintf("%c",c);
+							//textcolor(RED);
+							printf("%c",c);
 							//gotoxy(16,1);
 							break;
 						}
@@ -537,12 +538,12 @@ void play(int a[m][m],int w[m][m],int level)
 			while(!(c>='1' && c<='9'))
 				c=getch();
 			w[x][y]=c;
-			textcolor(RED);
-			cprintf("%c",c);
+			//textcolor(RED);
+			printf("%c",c);
 			//gotoxy(16,1);
 		}
 	}
-	textcolor(WHITE);
+	//textcolor(WHITE);
 }
 /******************************************************************/
 //FUNCTION TO CALCULATE SCORE OF A PLAYER
@@ -644,24 +645,24 @@ void display(int a[m][m])
 				c=a[i][j];
 				if(c>='1' && c<='9')
 				{
-					textcolor(RED);
-					cprintf("%c",c);
+					//textcolor(RED);
+					printf("%c",c);
 				}
 				else
 				{
-					textcolor(BLUE);
-					cprintf("%c",c);
+					//textcolor(BLUE);
+					printf("%c",c);
 				}
 			}
 			else if(a[i][j]==0)
 				std::cout<<' ';
 			else
 			{
-				textcolor(WHITE);
-				cprintf("%d",a[i][j]);
+				//textcolor(WHITE);
+				printf("%d",a[i][j]);
 			}
 		}
-	textcolor(WHITE);
+	//textcolor(WHITE);
 }
 /******************************************************************/
 //FUNCTION TO SOLVE A SUDOKU USING THREE LOGICS
@@ -1164,24 +1165,24 @@ void display2(int a[m][m])
 				c=a[i][j];
 				if(c>='1' && c<='9')
 				{
-					textcolor(RED);
-					cprintf("%c",c);
+					//textcolor(RED);
+					printf("%c",c);
 				}
 				else
 				{
-					textcolor(BLUE);
-					cprintf("%c",c);
+					//textcolor(BLUE);
+					printf("%c",c);
 				}
 			}
 			else if(a[i][j]==0)
 				std::cout<<' ';
 			else
 			{
-				textcolor(WHITE);
-				cprintf("%d",a[i][j]);
+				//textcolor(WHITE);
+				printf("%d",a[i][j]);
 			}
 		}
-	textcolor(WHITE);
+	//textcolor(WHITE);
 }
 void sudoku::input2(int sz)
 {
