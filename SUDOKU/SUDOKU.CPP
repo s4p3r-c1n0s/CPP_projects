@@ -1,6 +1,7 @@
 //INCLUDED HEADER FILES
 /******************************************************************/
 #include<fstream>
+#include<iostream>
 #include<curses.h>
 #include<cmath>
 #include<cstdio>
@@ -27,7 +28,7 @@ void prt(int i,int j,char c);
 void table(int n);
 void set_level(int &level);
 void instructions();
-void write(fstream &f);				//NEW FUNC
+void write(std::fstream &f);			//NEW FUNC
 void create(int a[m][m]);   			//NEW FUNC
 void display2(int a[m][m]);      		//NEW FUNC
 /******************************************************************/
@@ -82,7 +83,7 @@ void sudoku::input(int sz)
 {
 	clrscr();
 	sno=sz;
-	std::cout<<"Serial No.:"<<sno<<endl;
+	std::cout<<"Serial No.:"<<sno<<std::endl;
 	set_level(level);
 	std::cout<<"Enter SU-DO-KU:";
 	enterin(a);
@@ -94,11 +95,11 @@ void writefile(fstream &f)
 {
 	sudoku su;
 	char ch='Y';
-	f.open("sudoku.dat",ios::binary|ios::in);
-	f.seekg(0,ios::end);
+	f.open("sudoku.dat",std::ios::binary|std::ios::in);
+	f.seekg(0,std::ios::end);
 	long sz=f.tellg()/sizeof(su);
 	f.close();
-	f.open("sudoku.dat",ios::binary|ios::app);
+	f.open("sudoku.dat",std::ios::binary|std::ios::app);
 	while(ch=='Y')
 	{
 		su.input(sz+1);
@@ -121,7 +122,7 @@ void searchlevel(fstream &f)
 	sudoku su;
 	std::cout<<"Enter ";
 	set_level(l);
-	f.open("sudoku.dat",ios::binary|ios::in);
+	f.open("sudoku.dat",std::ios::binary|std::ios::in);
 	while(f.read((char*)(&su),sizeof(su)))
 		if(su.r_level()==l)
 		{
@@ -139,7 +140,7 @@ void searchlevel(fstream &f)
 void readfile(fstream &f)
 {
 	sudoku su;
-	f.open("sudoku.dat",ios::binary|ios::in);
+	f.open("sudoku.dat",std::ios::binary|std::ios::in);
 	while(f.read((char*)(&su),sizeof(su)))
 	{
 		clrscr();
@@ -158,8 +159,8 @@ void editfile(fstream &f)
 	clrscr();
 	int s_no;
 	sudoku su;
-	f.open("sudoku.dat",ios::binary|ios::in|ios::out);
-	f.seekg(0,ios::end);
+	f.open("sudoku.dat",std::ios::binary|std::ios::in|std::ios::out);
+	f.seekg(0,std::ios::end);
 	long sz=f.tellg()/sizeof(su);
 	f.seekg(0);
 	std::cout<<"Enter Serial no to Edit : ";
@@ -189,7 +190,7 @@ void searchfile(fstream &f,int level,int a[m][m],int w[m][m])
 {
 	sudoku su;
 	int x[20],pos=0;
-	f.open("sudoku.dat",ios::in|ios::binary);
+	f.open("sudoku.dat",std::ios::in|std::ios::binary);
 	while(f.read((char*)(&su),sizeof(su)))
 		if(su.r_level()==level)
 		{
@@ -197,7 +198,7 @@ void searchfile(fstream &f,int level,int a[m][m],int w[m][m])
 			pos++;
 		}
 	f.close();
-	f.open("sudoku.dat",ios::in|ios::binary);
+	f.open("sudoku.dat",std::ios::in|std::ios::binary);
 	randomize();
 	f.seekg(sizeof(su)*(x[random(pos)]-1));
 	f.read((char*)(&su),sizeof(su));
@@ -263,7 +264,7 @@ void player::input(int a[m][m],int w[m][m],int level)
 void writeplayer(fstream &f,int a[m][m],int w[m][m],int level)
 {
 	player pl;
-	f.open("player.dat",ios::app|ios::binary);
+	f.open("player.dat",std::ios::app|std::ios::binary);
 	pl.input(a,w,level);
 	f.write((char*)&pl,sizeof(pl));
 	f.close();
@@ -276,7 +277,7 @@ void show(fstream &f,int i,int n=v)
 {
 	clrscr();
 	player pl;
-	f.open("player.dat",ios::in|ios::binary);
+	f.open("player.dat",std::ios::in|std::ios::binary);
 	table(n);
 	for(int j=0;j<n;j++)
 	{
@@ -293,8 +294,8 @@ void show(fstream &f,int i,int n=v)
 /******************************************************************/
 long filesize(fstream &f)
 {
-	f.open("player.dat",ios::in|ios::binary);
-	f.seekg(0,ios::end);
+	f.open("player.dat",std::ios::in|std::ios::binary);
+	f.seekg(0,std::ios::end);
 	long fs=f.tellg()/sizeof(player);
 	f.close();
 	return fs;
@@ -319,7 +320,7 @@ void sortplayer(fstream &f)
 	player pl1,pl2;
 	long pos1,pos2,fs;
 	fs=filesize(f);
-	f.open("player.dat",ios::in|ios::out|ios::binary);
+	f.open("player.dat",std::ios::in|std::ios::out|std::ios::binary);
 	for(int i=0;i<fs-1;i++)
 		for(int j=0;j<fs-i-1;j++)
 		{
@@ -350,7 +351,7 @@ void savegame(int a[m][m],int w[m][m],int level)
 		for(int j=0;j<m;j++)
 			if(!((w[i][j]>='1'&& w[i][j]<='9')||(w[i][j]>=1 && w[i][j]<=9)))
 				w[i][j]=0;
-	f.open("continue.dat",ios::out|ios::binary);
+	f.open("continue.dat",std::ios::out|std::ios::binary);
 	f.write((char*)&a,sizeof(a));
 	f.write((char*)&w,sizeof(w));
 	f.write((char*)&level,sizeof(level));
@@ -362,7 +363,7 @@ void savegame(int a[m][m],int w[m][m],int level)
 void continuegame(int a[m][m],int w[m][m],int &level)
 {
 	fstream f;
-	f.open("continue.dat",ios::in|ios::binary);
+	f.open("continue.dat",std::ios::in|std::ios::binary);
 	f.read((char*)&a,sizeof(a));
 	f.read((char*)&w,sizeof(w));
 	f.read((char*)&level,sizeof(level));
@@ -1145,11 +1146,11 @@ void write(fstream &f)
 {
 	sudoku su;
 	char ch='Y';
-	f.open("sudoku.dat",ios::binary|ios::in);
-	f.seekg(0,ios::end);
+	f.open("sudoku.dat",std::ios::binary|std::ios::in);
+	f.seekg(0,std::ios::end);
 	long sz=f.tellg()/sizeof(su);
 	f.close();
-	f.open("sudoku.dat",ios::binary|ios::app);
+	f.open("sudoku.dat",std::ios::binary|std::ios::app);
 	while(ch=='Y')
 	{
 		su.input2(sz+1);
@@ -1199,7 +1200,7 @@ void sudoku::input2(int sz)
 {
 	clrscr();
 	sno=sz;
-	std::cout<<"Serial No.:"<<sno<<endl;
+	std::cout<<"Serial No.:"<<sno<<std::endl;
 	randomize();
 	level=random(5)+1;
 	std::cout<<"Level:"<<level;
