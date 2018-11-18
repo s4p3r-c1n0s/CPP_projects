@@ -90,7 +90,7 @@ void sudoku::input(int sz)
 /******************************************************************/
 //FUNCTION TO INPUT RECORDS TO THE FILE "sudoku.dat"
 /******************************************************************/
-void writefile(fstream &f)
+void writefile(std::fstream &f)
 {
 	sudoku su;
 	char ch='Y';
@@ -114,7 +114,7 @@ void writefile(fstream &f)
 //FUNCTION TO SEARCH RECORDS ACCORDING TO THE LEVEL FROM THE FILE
 //"sudoku.dat"
 /******************************************************************/
-void searchlevel(fstream &f)
+void searchlevel(std::fstream &f)
 {
 	int l;
 	sudoku su;
@@ -134,7 +134,7 @@ void searchlevel(fstream &f)
 /******************************************************************/
 //FUNCTION TO OUTPUT RECORDS FROM THE FILE "sudoku.dat"
 /******************************************************************/
-void readfile(fstream &f)
+void readfile(std::fstream &f)
 {
 	sudoku su;
 	f.open("sudoku.dat",std::ios::binary|std::ios::in);
@@ -150,7 +150,7 @@ void readfile(fstream &f)
 /******************************************************************/
 //FUNCTION TO EDIT RECORDS OF THE FILE "sudoku.dat"
 /******************************************************************/
-void editfile(fstream &f)
+void editfile(std::fstream &f)
 {
 	int s_no;
 	sudoku su;
@@ -181,7 +181,7 @@ void editfile(fstream &f)
 /******************************************************************/
 //FUNCTION TO RANDOMLY SEARCH RECORDS FROM THE FILE "sudoku.dat"
 /******************************************************************/
-void searchfile(fstream &f,int level,int a[m][m],int w[m][m])
+void searchfile(std::fstream &f,int level,int a[m][m],int w[m][m])
 {
 	sudoku su;
 	int x[20],pos=0;
@@ -194,8 +194,8 @@ void searchfile(fstream &f,int level,int a[m][m],int w[m][m])
 		}
 	f.close();
 	f.open("sudoku.dat",std::ios::in|std::ios::binary);
-	randomize();
-	f.seekg(sizeof(su)*(x[random(pos)]-1));
+	random();
+	f.seekg(sizeof(su)*(x[rand()%pos]-1));
 	f.read((char*)(&su),sizeof(su));
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
@@ -222,11 +222,11 @@ class player
 	/******************************************************************/
 	void output(int i,int j)
 	{
-		gotoxy(2,(4+(j*2)));
+		//gotoxy(2,(4+(j*2)));
 		std::cout<<1+j+(i*v)<<'.';
-		gotoxy(6,(4+(j*2)));
+		//gotoxy(6,(4+(j*2)));
 		puts(name);
-		gotoxy(61,(4+(j*2)));
+		//gotoxy(61,(4+(j*2)));
 		std::cout<<scr;
 	}
 	/******************************************************************/
@@ -246,7 +246,7 @@ void player::input(int a[m][m],int w[m][m],int level)
 	gets(name);
 	for(int i=0;i<strlen(name);i++)
 		name[i]=toupper(name[i]);
-	gotoxy(19,1);
+	//gotoxy(19,1);
 	puts(name);
 	scr=score(a,w,level);
 	std::cout<<"Your SCORE : "<<scr;
@@ -255,7 +255,7 @@ void player::input(int a[m][m],int w[m][m],int level)
 /******************************************************************/
 //FUNCTION TO INPUT RECORDS TO THE FILE "player.dat"
 /******************************************************************/
-void writeplayer(fstream &f,int a[m][m],int w[m][m],int level)
+void writeplayer(std::fstream &f,int a[m][m],int w[m][m],int level)
 {
 	player pl;
 	f.open("player.dat",std::ios::app|std::ios::binary);
@@ -267,7 +267,7 @@ void writeplayer(fstream &f,int a[m][m],int w[m][m],int level)
 /******************************************************************/
 //FUNCTION TO DISPLAY A SET OF 22 RECORD FROM THE FILE "player.dat"
 /******************************************************************/
-void show(fstream &f,int i,int n=v)
+void show(std::fstream &f,int i,int n=v)
 {
 	player pl;
 	f.open("player.dat",std::ios::in|std::ios::binary);
@@ -277,7 +277,7 @@ void show(fstream &f,int i,int n=v)
 		f.seekg((j+(i*v))*sizeof(pl));
 		f.read((char*)&pl,sizeof(pl));
 		pl.output(i,j);
-		delay(200);
+		//delay(200);
 	}
 	f.close();
 	getch();
@@ -285,7 +285,7 @@ void show(fstream &f,int i,int n=v)
 /******************************************************************/
 //FUNCTION TO RETURN THE NO. OF RECORDS STORED IN FILE "player.dat"
 /******************************************************************/
-long filesize(fstream &f)
+long filesize(std::ftream &f)
 {
 	f.open("player.dat",std::ios::in|std::ios::binary);
 	f.seekg(0,std::ios::end);
@@ -296,7 +296,7 @@ long filesize(fstream &f)
 /******************************************************************/
 //FUNCTION TO DISPLAY RECORDS FROM THE FILE "player.dat"
 /******************************************************************/
-void readplayer(fstream &f)
+void readplayer(std::fstream &f)
 {
 	for(int i=0;i<filesize(f)/v;i++)
 		show(f,i);
@@ -308,7 +308,7 @@ void readplayer(fstream &f)
 //FUNCTION TO SORT RECORDS IN DESCENDING ORDER OF SCORES TO THE FILE
 //"player.dat"
 /******************************************************************/
-void sortplayer(fstream &f)
+void sortplayer(std::fstream &f)
 {
 	player pl1,pl2;
 	long pos1,pos2,fs;
@@ -339,7 +339,7 @@ void sortplayer(fstream &f)
 /******************************************************************/
 void savegame(int a[m][m],int w[m][m],int level)
 {
-	fstream f;
+	std::fstream f;
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
 			if(!((w[i][j]>='1'&& w[i][j]<='9')||(w[i][j]>=1 && w[i][j]<=9)))
@@ -355,7 +355,7 @@ void savegame(int a[m][m],int w[m][m],int level)
 /******************************************************************/
 void continuegame(int a[m][m],int w[m][m],int &level)
 {
-	fstream f;
+	std::fstream f;
 	f.open("continue.dat",std::ios::in|std::ios::binary);
 	f.read((char*)&a,sizeof(a));
 	f.read((char*)&w,sizeof(w));
@@ -369,7 +369,7 @@ void continuegame(int a[m][m],int w[m][m],int &level)
 /******************************************************************/
 int main()
 {
-	fstream f;
+	std::fstream f;
 	player pl;
 	int s[m][m],w[m][m],l=1,a[m][m];
 	char u;
@@ -409,7 +409,7 @@ int main()
 /******************************************************************/
 void instructions()
 {
-	gotoxy(20,20);
+	//gotoxy(20,20);
 	std::cout<<"I  N  S  T  R  U  C  T  I  O  N  S\n\n\n";
 	std::cout<<"\nFill the Grid so that every row, column & 3x3 box ";
 	std::cout<<"contains digits 1-9\n\nEach puzzle has 1 correct solution";
@@ -420,7 +420,7 @@ void instructions()
 /******************************************************************/
 void endgame(int a[m][m],int w[m][m],int level)
 {
-	fstream f;
+	std::fstream f;
 	char c;
 	int s[m][m];
 	for(int i=0;i<m;i++)
@@ -434,19 +434,19 @@ void endgame(int a[m][m],int w[m][m],int level)
 			if(!(w[i][j]>=1 && w[i][j]<=9))
 				w[i][j]=0;
 		}
-	gotoxy(25,20);
+	//gotoxy(25,20);
 	std::cout<<"Y O U R   F I N A L   A N S W E R";
 	display(w);
-	delay(1000);
+	//delay(1000);
 	do
 	{
 		solve(a,s);
 	}while(verify(s)!=0 && sumer(s)!=0);
-	gotoxy(27,20);
+	//gotoxy(27,20);
 	std::cout<<"S   O   L   U   T   I   O   N";
 	display(s);
 	getch();
-	delay(1000);
+	//delay(1000);
 	writeplayer(f,a,w,level);
 	sortplayer(f);
 	readplayer(f);
@@ -484,11 +484,11 @@ void play(int a[m][m],int w[m][m],int level)
 				e=c;
 			}
 	display(w);
-	gotoxy(1,50);std::cout<<"END the GAME [~]";
-	gotoxy(1,4);std::cout<<"LEVEL : ";
+	//gotoxy(1,50);std::cout<<"END the GAME [~]";
+	//gotoxy(1,4);std::cout<<"LEVEL : ";
 	for(int u=0;u<level;u++)std::cout<<"* ";
-	gotoxy(60,50);std::cout<<"CONTINUE later [0]";
-	gotoxy(1,1);std::cout<<"Enter CHOICE : ";
+	//gotoxy(60,50);std::cout<<"CONTINUE later [0]";
+	//gotoxy(1,1);std::cout<<"Enter CHOICE : ";
 	for(;;)
 	{
 		ch=getch();
@@ -505,41 +505,41 @@ void play(int a[m][m],int w[m][m],int level)
 		else if(ch>='1' && ch<='9')
 		{
 			c='0';
-			for(i=0;i<m;i++)
+			for(int i=0;i<m;i++)
 			{
-				for(j=0;j<m;j++)
+				for(int j=0;j<m;j++)
 					if(w[i][j]==ch)
 					{
-						gotoxy(((j+1)*2)+p,((i+1)*2)+p);
+						//gotoxy(((j+1)*2)+p,((i+1)*2)+p);
 						c=getch();
 						if(c>='1' && c<='9')
 						{
 							w[i][j]=c;
 							textcolor(RED);
 							cprintf("%c",c);
-							gotoxy(16,1);
+							//gotoxy(16,1);
 							break;
 						}
 					}
 				if(c>='1' && c<='9')
 					break;
 			}
-			gotoxy(16,1);
+			//gotoxy(16,1);
 		}
 		else if((ch>='a'&& ch<='z')||(ch>='A'&& ch<='Z')||(ch>='!'&& ch<=e))
 		{
-			for(i=0;i<m;i++)
-				for(j=0;j<m;j++)
+			for(int i=0;i<m;i++)
+				for(int j=0;j<m;j++)
 					if(w[i][j]==ch)
 					{x=i;y=j;}
-			gotoxy(((y+1)*2)+p,((x+1)*2)+p);
+			//gotoxy(((y+1)*2)+p,((x+1)*2)+p);
 			c=getch();
 			while(!(c>='1' && c<='9'))
 				c=getch();
 			w[x][y]=c;
 			textcolor(RED);
 			cprintf("%c",c);
-			gotoxy(16,1);
+			//gotoxy(16,1);
 		}
 	}
 	textcolor(WHITE);
@@ -554,8 +554,8 @@ long score(int a[m][m],int w[m][m],int level)
 	do
 	{solve(a,s);
 	}while(verify(s)!=0 && sumer(s)!=0);
-	for(i=0;i<m;i++)
-		for(j=0;j<m;j++)
+	for(int i=0;i<m;i++)
+		for(int j=0;j<m;j++)
 		{
 			if(a[i][j]==s[i][j])
 				s[i][j]=0;
@@ -573,14 +573,14 @@ long score(int a[m][m],int w[m][m],int level)
 void solve(int a[m][m],int s[m][m])
 {
 	int i,j,y;
-	for(i=0;i<m;i++)
-		for(j=0;j<m;j++)
+	for(int i=0;i<m;i++)
+		for(int j=0;j<m;j++)
 		{
 			s[i][j]=a[i][j];
 		}
 	int z[m*m][m],h=1,zc[m*m][m],sc[m][m];
-	for(i=0;i<m*m;i++)
-		for(j=0;j<m;j++)
+	for(int i=0;i<m*m;i++)
+		for(int j=0;j<m;j++)
 		{
 			z[i][j]=h++;
 			if(j==(m-1))
@@ -590,8 +590,8 @@ void solve(int a[m][m],int s[m][m])
 	if(check(s)!=0)
 	{
 		copier(sc,s,zc,z);
-		for(i=0;i<m;i++)
-			for(j=0;j<m;j++)
+		for(int i=0;i<m;i++)
+			for(int j=0;j<m;j++)
 				for(y=0;y<m;y++)
 					if(zc[m*i+j][y]!=0)
 					{
@@ -613,10 +613,10 @@ void enterin(int a[m][m])
 	int p=30;
 	box(p);
 	int i,j;
-	for(i=0;i<m;i++)
-		for(j=0;j<m;j++)
+	for(int i=0;i<m;i++)
+		for(int j=0;j<m;j++)
 		{
-			gotoxy(((j+1)*2)+p,((i+1)*2)+p);
+			//gotoxy(((j+1)*2)+p,((i+1)*2)+p);
 			c=getch();
 			a[i][j]=convert(c);
 			if(a[i][j]>=1 && a[i][j]<=9)
@@ -634,11 +634,11 @@ void display(int a[m][m])
 	char c;
 	box(p);
 	int i,j;
-	for(i=0;i<m;i++)
-		for(j=0;j<m;j++)
+	for(int i=0;i<m;i++)
+		for(int j=0;j<m;j++)
 		{
-			gotoxy(((j+1)*2)+p,((i+1)*2)+p);
-			delay(50);
+			//gotoxy(((j+1)*2)+p,((i+1)*2)+p);
+			//delay(50);
 			if(a[i][j]>9)
 			{
 				c=a[i][j];
@@ -671,8 +671,8 @@ void logic(int a[m][m], int z[m*m][m])
 	int i,j,y,k,gl,pl,g,p,e,l,n,r;
 	int c[m*m],tz[m];
 	for(int o=0;o<81;o++)
-		for(i=0;i<m;i++)
-			for(j=0;j<m;j++)
+		for(int i=0;i<m;i++)
+			for(int j=0;j<m;j++)
 			{
 				c[(m*i)+j]=0;  			//probability no.(c)=0 in beginning
 				if(a[i][j]==0)
@@ -845,9 +845,9 @@ int verify(int s[m][m])
 	int arr[m];
 	for(y=0;y<m;y++)
 		arr[y]=h++;
-	for(i=0;i<m;i++)
+	for(int i=0;i<m;i++)
 	{
-		for(j=0;j<m;j++)
+		for(int j=0;j<m;j++)
 		{
 			for(y=0;y<m;y++)
 				if(s[i][j]==arr[y])
@@ -868,9 +868,9 @@ int verify(int s[m][m])
 int sumer(int s[m][m])
 {
 	int i,j,c=0,o=0;
-	for(i=0;i<m;i++)
+	for(int i=0;i<m;i++)
 	{
-		for(j=0;j<m;j++)
+		for(int j=0;j<m;j++)
 			o+=s[i][j];
 		if(o!=(1+2+3+4+5+6+7+8+9))
 			c++;
@@ -896,8 +896,8 @@ void box(int p)
 				if((i-1)%3==0)
 				{prt(i+p,j+p,sr2);prt(j+p,i+p,sr1);}
 			}
-	for(i=1;i<=m*2+1;i++)
-		for(j=1;j<=m*2+1;j++)
+	for(int i=1;i<=m*2+1;i++)
+		for(int j=1;j<=m*2+1;j++)
 			if(i%2!=0 && j%2!=0)
 			{
 				if(i<=j)
@@ -924,8 +924,8 @@ void box(int p)
 					}
 				}
 			}
-	for(i=1;i<=m*2+1;i++)
-		for(j=1;j<=m*2+1;j++)
+	for(int i=1;i<=m*2+1;i++)
+		for(int j=1;j<=m*2+1;j++)
 			if((i-1)%6==0 && (j-1)%6==0)
 			{
 				if(i<j && j!=m*2+1)
@@ -957,9 +957,9 @@ void intro()
 			{
 				x1=40+pow((pow(r,2)-pow((y-25),2)),0.5);
 				x2=40-pow((pow(r,2)-pow((y-25),2)),0.5);
-				delay(10);
+				//delay(10);
 				prt(y,x1,c);
-				delay(10);
+				//delay(10);
 				prt(y,x2,c);
 			}
 	for(r=20;r<=23;r++)
@@ -968,20 +968,20 @@ void intro()
 			{
 				x1=25+pow((pow(r,2)-pow((y-40),2)),0.5);
 				x2=25-pow((pow(r,2)-pow((y-40),2)),0.5);
-				delay(10);
+				//delay(10);
 				prt(x1,y,c);
-				delay(10);
+				//delay(10);
 				prt(x2,y,c);
 			}
-	gotoxy(33,23);std::cout<<"| S U D O K U |";
-	delay(1000);
-	gotoxy(28,20);std::cout<<"C + +   P R O J E C T   O N";
-	gotoxy(33,22);std::cout<<"---------------";
-	gotoxy(33,24);std::cout<<"---------------";
-	delay(1000);
-	gotoxy(32,31);std::cout<<"B Y   :   U M A N G";
-	delay(1000);
-	gotoxy(32,33);std::cout<<"Btech : 1st SEM";
+	//gotoxy(33,23);std::cout<<"| S U D O K U |";
+	//delay(1000);
+	//gotoxy(28,20);std::cout<<"C + +   P R O J E C T   O N";
+	//gotoxy(33,22);std::cout<<"---------------";
+	//gotoxy(33,24);std::cout<<"---------------";
+	//delay(1000);
+	//gotoxy(32,31);std::cout<<"B Y   :   U M A N G";
+	//delay(1000);
+	//gotoxy(32,33);std::cout<<"Btech : 1st SEM";
 	getch();
 }
 /******************************************************************/
@@ -1010,14 +1010,14 @@ int convert(char c)
 /******************************************************************/
 void prt(int i,int j,char c)
 {
-	gotoxy(j,i);std::cout<<c;
+	//gotoxy(j,i);std::cout<<c;
 }
 /******************************************************************/
 //FUNCTION TO CREATE TABLE FOR DISPLAYING SCORES AND PLAYER NAMES
 /******************************************************************/
 void table(int n)
 {
-	gotoxy(28,2);
+	//gotoxy(28,2);
 	std::cout<<"NAME\t\t\t\t\tSCORE";
 	char co1=218,co2=191,co3=192,co4=217;
 	char hr=196,vr=179,cr=197;
@@ -1048,7 +1048,7 @@ void table(int n)
 	prt(3,80,co2);
 	prt(n*2+3,80,co4);
 	prt(n*2+3,1,co3);
-	gotoxy(65,49);
+	//gotoxy(65,49);
 	std::cout<<"Continue........";
 }
 /**********************************************************************/
@@ -1056,10 +1056,10 @@ void table(int n)
 /**********************************************************************/
 void create(int a[m][m])
 {
-	randomize();
+	random();
 	int i,j,s[m][m],u,c,pl,gl,p,g,y,k=0;
-	for(i=0;i<m;i++)
-		for(j=0;j<m;j++)
+	for(int i=0;i<m;i++)
+		for(int j=0;j<m;j++)
 		{
 			a[i][j]=0;
 			s[i][j]=0;
@@ -1067,9 +1067,9 @@ void create(int a[m][m])
 	box(30);
 	while(check(a)!=0)
 	{
-		i=random(9)+0;
-		j=random(9)+0;
-		u=random(9)+1;
+		i=rand()%9+0;
+		j=rand()%9+0;
+		u=rand()%9+1;
 		//if(a[i][j]==0)
 		{
 			c=0;
@@ -1092,21 +1092,21 @@ void create(int a[m][m])
 		if(k%1000==0)
 		{
 			c=0;
-			for(i=0;i<m;i++)
-				for(j=0;j<m;j++)
+			for(int i=0;i<m;i++)
+				for(int j=0;j<m;j++)
 					if(s[i][j]!=a[i][j])
 						c++;
 			if(c==0)
 			{
 				k=0;
-				for(i=0;i<m;i++)
-					for(j=0;j<m;j++)
+				for(int i=0;i<m;i++)
+					for(int j=0;j<m;j++)
 						a[i][j]=0;
 			}
 			else
 			{
-				for(i=0;i<m;i++)
-					for(j=0;j<m;j++)
+				for(int i=0;i<m;i++)
+					for(int j=0;j<m;j++)
 						s[i][j]=a[i][j];
 			}
 		}
@@ -1114,8 +1114,8 @@ void create(int a[m][m])
 	display2(a);
 	do
 	{
-		i=random(9)+0;
-		j=random(9)+0;
+		i=rand()%9+0;
+		j=rand()%9+0;
 		if(a[i][j]!=0)
 		{
 			u=a[i][j];
@@ -1129,7 +1129,7 @@ void create(int a[m][m])
 	display2(a);
 	std::cout<<"\nCOMPLETED!!";
 }
-void write(fstream &f)
+void write(std::fstream &f)
 {
 	sudoku su;
 	char ch='Y';
@@ -1154,11 +1154,11 @@ void display2(int a[m][m])
 	int p=30;
 	char c;
 	int i,j;
-	for(i=0;i<m;i++)
-		for(j=0;j<m;j++)
+	for(int i=0;i<m;i++)
+		for(int j=0;j<m;j++)
 		{
-			gotoxy(((j+1)*2)+p,((i+1)*2)+p);
-			//delay(50);
+			//gotoxy(((j+1)*2)+p,((i+1)*2)+p);
+			////delay(50);
 			if(a[i][j]>9)
 			{
 				c=a[i][j];
@@ -1187,8 +1187,8 @@ void sudoku::input2(int sz)
 {
 	sno=sz;
 	std::cout<<"Serial No.:"<<sno<<std::endl;
-	randomize();
-	level=random(5)+1;
+	random();
+	level=rand()%5+1;
 	std::cout<<"Level:"<<level;
 	std::cout<<"\nSU-DO-KU:";
 	create(a);
