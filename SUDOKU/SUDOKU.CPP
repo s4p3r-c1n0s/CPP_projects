@@ -104,7 +104,7 @@ void writefile(std::fstream &f)
 		su.input(sz+1);
 		f.write((char*)(&su),sizeof(su));
 		std::cout<<"\nMORE[Y,N]:";
-		ch=toupper(getch());
+		ch=toupper(getchar());
 		std::cout<<ch;
 	}
 	f.close();
@@ -126,7 +126,7 @@ void searchlevel(std::fstream &f)
 		{
 			su.output();
 			std::cout<<"\nNEXT";
-			getch();
+			getchar();
 		}
 	f.close();
 	return;
@@ -142,7 +142,7 @@ void readfile(std::fstream &f)
 	{
 		su.output();
 		std::cout<<"\nNEXT";
-		getch();
+		getchar();
 	}
 	f.close();
 	return;
@@ -163,7 +163,7 @@ void editfile(std::fstream &f)
 	if(s_no<1 || s_no>sz)
 	{
 		std::cout<<"No such record exists";
-		getch();
+		getchar();
 	}
 	else
 	{
@@ -250,7 +250,7 @@ void player::input(int a[m][m],int w[m][m],int level)
 	puts(name);
 	scr=score(a,w,level);
 	std::cout<<"Your SCORE : "<<scr;
-	getch();
+	getchar();
 }
 /******************************************************************/
 //FUNCTION TO INPUT RECORDS TO THE FILE "player.dat"
@@ -280,7 +280,7 @@ void show(std::fstream &f,int i,int n=v)
 		//delay(200);
 	}
 	f.close();
-	getch();
+	getchar();
 }
 /******************************************************************/
 //FUNCTION TO RETURN THE NO. OF RECORDS STORED IN FILE "player.dat"
@@ -373,7 +373,7 @@ int main()
 	std::fstream f;
 	player pl;
 	int s[m][m],w[m][m],l=1,a[m][m];
-	char u;
+	unsigned char u;
 	//textcolor(WHITE);
 	intro();
 	for(;;)
@@ -384,9 +384,9 @@ int main()
 		std::cout<<"7) Read File\n\n8) Search File";
 		std::cout<<"\n\n9) Edit File\n\n0) Exit";
 		std::cout<<"\n\n\n\nE n t e r   C h o i c e : ";
-		u=getch();
+		u=getchar();
 		while(!(u>='0'&& u<='9'))
-			u=getch();
+			u=getchar();
 		switch(u)
 		{
 			case '1' : searchfile(f,l,a,w);
@@ -414,7 +414,7 @@ void instructions()
 	std::cout<<"I  N  S  T  R  U  C  T  I  O  N  S\n\n\n";
 	std::cout<<"\nFill the Grid so that every row, column & 3x3 box ";
 	std::cout<<"contains digits 1-9\n\nEach puzzle has 1 correct solution";
-	getch();
+	getchar();
 }
 /******************************************************************/
 //FUNCTION TO END THE GAME AND DISPLAY THE SOLUTION & SCORE
@@ -446,7 +446,7 @@ void endgame(int a[m][m],int w[m][m],int level)
 	//gotoxy(27,20);
 	std::cout<<"S   O   L   U   T   I   O   N";
 	display(s);
-	getch();
+	getchar();
 	//delay(1000);
 	writeplayer(f,a,w,level);
 	sortplayer(f);
@@ -492,7 +492,7 @@ void play(int a[m][m],int w[m][m],int level)
 	//gotoxy(1,1);std::cout<<"Enter CHOICE : ";
 	for(;;)
 	{
-		ch=getch();
+		ch=getchar();
 		if(ch=='~' || ch=='0')
 		{
 			//textcolor(WHITE);
@@ -512,7 +512,7 @@ void play(int a[m][m],int w[m][m],int level)
 					if(w[i][j]==ch)
 					{
 						//gotoxy(((j+1)*2)+p,((i+1)*2)+p);
-						c=getch();
+						c=getchar();
 						if(c>='1' && c<='9')
 						{
 							w[i][j]=c;
@@ -534,9 +534,9 @@ void play(int a[m][m],int w[m][m],int level)
 					if(w[i][j]==ch)
 					{x=i;y=j;}
 			//gotoxy(((y+1)*2)+p,((x+1)*2)+p);
-			c=getch();
+			c=getchar();
 			while(!(c>='1' && c<='9'))
-				c=getch();
+				c=getchar();
 			w[x][y]=c;
 			//textcolor(RED);
 			printf("%c",c);
@@ -618,7 +618,7 @@ void enterin(int a[m][m])
 		for(int j=0;j<m;j++)
 		{
 			//gotoxy(((j+1)*2)+p,((i+1)*2)+p);
-			c=getch();
+			c=getchar();
 			a[i][j]=convert(c);
 			if(a[i][j]>=1 && a[i][j]<=9)
 				std::cout<<a[i][j];
@@ -884,11 +884,11 @@ int sumer(int s[m][m])
 /******************************************************************/
 void box(int p)
 {
-	char co1=201,co2=187,co3=200,co4=188;
-	char cr1=206,cr2=216,cr3=215,cr4=197;
-	char sr1=186,sr2=205,sr3=179,sr4=196;
-	char ts1=199,ts2=209,ts3=207,ts4=182;
-	char td1=204,td2=185,td3=203,td4=202;
+	unsigned char co1=201,co2=187,co3=200,co4=188;
+	unsigned char cr1=206,cr2=216,cr3=215,cr4=197;
+	unsigned char sr1=186,sr2=205,sr3=179,sr4=196;
+	unsigned char ts1=199,ts2=209,ts3=207,ts4=182;
+	unsigned char td1=204,td2=185,td3=203,td4=202;
 	for(int i=1;i<=m*2+1;i++)
 		for(int j=1;j<=m*2+1;j++)
 			if(i%2!=0)
@@ -950,7 +950,7 @@ void box(int p)
 /******************************************************************/
 void intro()
 {
-	char c=196;
+	unsigned char c=196;
 	int y,x1,x2,r;
 	for(r=20;r<=23;r++)
 		for(y=1;y<=50;y++)
@@ -983,7 +983,7 @@ void intro()
 	//gotoxy(32,31);std::cout<<"B Y   :   U M A N G";
 	//delay(1000);
 	//gotoxy(32,33);std::cout<<"Btech : 1st SEM";
-	getch();
+	getchar();
 }
 /******************************************************************/
 //FUNCTION TO CONVERT A CHARACTER TO AN INTEGER (0 TO 9)
@@ -1020,9 +1020,9 @@ void table(int n)
 {
 	//gotoxy(28,2);
 	std::cout<<"NAME\t\t\t\t\tSCORE";
-	char co1=218,co2=191,co3=192,co4=217;
-	char hr=196,vr=179,cr=197;
-	char t1=194,t2=193,t3=195,t4=180;
+	unsigned char co1=218,co2=191,co3=192,co4=217;
+	unsigned char hr=196,vr=179,cr=197;
+	unsigned char t1=194,t2=193,t3=195,t4=180;
 	for(int i=3;i<=n*2+3;i++)
 		for(int j=1;j<=80;j++)
 		{
@@ -1144,7 +1144,7 @@ void write(std::fstream &f)
 		su.input2(sz+1);
 		f.write((char*)(&su),sizeof(su));
 		std::cout<<"\nMORE[Y,N]:";
-		ch=toupper(getch());
+		ch=toupper(getchar());
 		std::cout<<ch;
 	}
 	f.close();
