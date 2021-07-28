@@ -1,2 +1,4 @@
-No indentation.. 
-:( Sorry.. 
+pending: 
+ - convert all couts to wprintw
+ - convert all cins
+ - try compile with ncurses on linux box if sudoku box gets displayed
