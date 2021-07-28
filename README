@@ -1,1 +1,2 @@
-Old C++ Projects /*TURBO C++*/
+Old C++ Projects /*Borland TURBO C++*/
+SUDOKU has been converted to ncurses, but required ncursesw lib
