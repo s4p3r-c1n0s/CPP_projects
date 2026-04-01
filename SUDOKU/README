@@ -1,4 +1,100 @@
-pending: 
- - convert all couts to wprintw
- - convert all cins
- - try compile with ncurses on linux box if sudoku box gets displayed
+# Sudoku (Borland C++ Project Ported to ncurses)
+
+This project is a modern terminal port of the original Borland C++ Sudoku game.
+It keeps the classic gameplay style (tag placeholders, score table, save/continue) while rendering in a UTF-8 ncurses terminal.
+
+## Features
+
+- Classic 9x9 Sudoku with boxed 3x3 sections
+- Tag-based input for empty cells (A..Z, a..z, then symbols)
+- Colored board rendering:
+  - fixed numbers: normal/white
+  - placeholders: blue
+  - player-entered values: red
+- End-game preview + full solution view
+- Highscore table with pagination
+- Continue/save support
+- Random puzzle generation
+
+## Requirements
+
+- C++ compiler with C++17 support (`g++` or `clang++`)
+- ncurses development library
+- UTF-8 terminal/font that supports box-drawing characters
+
+## Build
+
+### macOS (Homebrew ncurses or system ncurses)
+
+```bash
+g++ -std=c++17 WSUDOKU.CPP -lncurses -o wsudoku
+```
+
+### Linux (if your distro separates wide-char ncurses)
+
+```bash
+g++ -std=c++17 WSUDOKU.CPP -lncursesw -o wsudoku
+```
+
+If `-lncursesw` is not available on your system, use `-lncurses`.
+
+## Run
+
+```bash
+./wsudoku
+```
+
+## Main Menu
+
+- `1` Play Sudoku
+- `2` Highscores
+- `3` Continue saved game
+- `4` Set level (`1` to `5`)
+- `5` Instructions
+- `6` Write File (generate/store random puzzles)
+- `7` Read File (view stored puzzles)
+- `8` Search File (filter puzzles by level)
+- `9` Edit File
+- `0` Exit
+
+## Gameplay Controls
+
+When a puzzle starts, empty cells are shown as placeholders.
+
+- Type a placeholder character (for example `A`, `b`, `!`) to select a cell
+- Then type a digit `1` to `9` to fill that cell
+- Press `0` to save and continue later
+- Press `~` to end the game and view final answer + solution
+
+## Data Files
+
+- `sudoku.dat` -> puzzle records
+- `player.dat` -> highscore records
+- `continue.dat` -> saved in-progress game
+
+Notes:
+
+- `continue.dat` stores one save state (latest save overwrites previous)
+- If `sudoku.dat` has an incompatible legacy layout, the program recreates it automatically
+
+## Troubleshooting
+
+### Grid characters look broken
+
+- Make sure terminal encoding is UTF-8
+- Use a font with box-drawing support (for example, JetBrains Mono, Menlo, Cascadia Mono)
+- Ensure `TERM` is a capable terminal type (`xterm-256color` is recommended)
+
+### Colors are not visible
+
+- Use a terminal that supports ANSI colors
+- Avoid `TERM=dumb`
+
+### Highscore table overlaps or clips
+
+- Resize terminal to a reasonable size (recommended 90x28 or larger)
+- Relaunch after resizing if your terminal does not redraw cleanly
+
+## Legacy Note
+
+`SUDOKU.CPP` is the older source. Active terminal version is `WSUDOKU.CPP`.
