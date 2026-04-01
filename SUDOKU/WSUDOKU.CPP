@@ -197,13 +197,39 @@ void searchfile(std::fstream &f,int level,int a[m][m],int w[m][m])
 	sudoku su;
 	int x[20],pos=0;
 	f.open("sudoku.dat",std::ios::in|std::ios::binary);
+	if(!f)
+	{
+		wclear(win);
+		box(win,0,0);
+		wmove(win,2,2);
+		wprintw(win,"Unable to open sudoku.dat");
+		wmove(win,2,4);
+		wprintw(win,"Press ENTER to continue...");
+		wrefresh(win);
+		getchar();
+		return;
+	}
 	while(f.read((char*)(&su),sizeof(su)))
 		if(su.r_level()==level)
 		{
-			x[pos]=su.r_sno();
-			pos++;
+			if(pos<20)
+				x[pos++]=su.r_sno();
 		}
 	f.close();
+	if(pos==0)
+	{
+		wclear(win);
+		box(win,0,0);
+		wmove(win,2,2);
+		wprintw(win,"No puzzle found for level %d.",level);
+		wmove(win,2,4);
+		wprintw(win,"Use option 6 to create puzzles or option 4 to change level.");
+		wmove(win,2,6);
+		wprintw(win,"Press ENTER to continue...");
+		wrefresh(win);
+		getchar();
+		return;
+	}
 	f.open("sudoku.dat",std::ios::in|std::ios::binary);
 	random();
 	f.seekg(sizeof(su)*(x[rand()%pos]-1));
@@ -1235,4 +1261,3 @@ void sudoku::input2(int sz)
 	std::cout<<"\nSU-DO-KU:";
 	create(a);
 }
-
