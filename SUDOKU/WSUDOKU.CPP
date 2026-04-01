@@ -103,20 +103,20 @@ void copier(int sc[m][m],int s[m][m],int zc[m*m][m],int z[m*m][m]);
 int verify(int s[m][m]);
 int sumer(int s[m][m]);
 int check(int s[m][m]);
-void display(int a[m][m]);
+void render_board(int a[m][m]);
 void enterin(int a[m][m]);
-void box(int p);
-int convert(char c);
+void draw_sudoku_grid(int p);
+int char_to_digit(char c);
 void intro();
 void play(int a[m][m],int w[m][m],int level);
 void endgame(int a[m][m],int w[m][m],int level);
-void prt(int i,int j,char c);
+void draw_grid_char(int i,int j,char c);
 void table(int n);
-void set_level(int &level);
+void prompt_level(int &level);
 void instructions();
 void write(std::fstream &f);			//NEW FUNC
 void create(int a[m][m]);   			//NEW FUNC
-void display2(int a[m][m]);      		//NEW FUNC
+void render_preview_board(int a[m][m]);      		//NEW FUNC
 int usable_puzzle(sudoku &su,int required_level=0);
 void ensure_sudoku_file_layout();
 /******************************************************************/
@@ -140,7 +140,7 @@ class sudoku
 		int s[m][m];
 		std::cout<<"Serial No:"<<sno;
 		std::cout<<"\nLevel:"<<level;
-		display(a);
+		render_board(a);
 	}
 	/******************************************************************/
 	//FUNCTION TO RETURN THE LEVEL OF SUDOKU
@@ -172,7 +172,7 @@ void sudoku::input(int sz)
 	system("clear");
 	sno=sz;
 	std::cout<<"Serial No.:"<<sno<<std::endl;
-	set_level(level);
+	prompt_level(level);
 	std::cout<<"Enter SU-DO-KU:";
 	enterin(a);
 }
@@ -210,7 +210,7 @@ void searchlevel(std::fstream &f)
 	int l;
 	sudoku su;
 	std::cout<<"Enter ";
-	set_level(l);
+	prompt_level(l);
 	ensure_sudoku_file_layout();
 	f.open(kSudokuFile,std::ios::binary|std::ios::in);
 	while(f.read((char*)(&su),sizeof(su)))
@@ -433,7 +433,7 @@ void player::input(int a[m][m],int w[m][m],int level)
 /******************************************************************/
 //FUNCTION TO INPUT RECORDS TO THE FILE "player.dat"
 /******************************************************************/
-void writeplayer(std::fstream &f,int a[m][m],int w[m][m],int level)
+void append_player_score(std::fstream &f,int a[m][m],int w[m][m],int level)
 {
 	player pl;
 	f.open("player.dat",std::ios::app|std::ios::binary);
@@ -445,7 +445,7 @@ void writeplayer(std::fstream &f,int a[m][m],int w[m][m],int level)
 /******************************************************************/
 //FUNCTION TO DISPLAY A SET OF 22 RECORD FROM THE FILE "player.dat"
 /******************************************************************/
-void show(std::fstream &f,long start,int n=v)
+void render_highscore_page(std::fstream &f,long start,int n=v)
 {
 	player pl;
 	int rows=0,cols=0;
@@ -509,7 +509,7 @@ void show(std::fstream &f,long start,int n=v)
 /******************************************************************/
 //FUNCTION TO RETURN THE NO. OF RECORDS STORED IN FILE "player.dat"
 /******************************************************************/
-long filesize(std::fstream &f)
+long player_record_count(std::fstream &f)
 {
 	f.open("player.dat",std::ios::in|std::ios::binary);
 	f.seekg(0,std::ios::end);
@@ -520,9 +520,9 @@ long filesize(std::fstream &f)
 /******************************************************************/
 //FUNCTION TO DISPLAY RECORDS FROM THE FILE "player.dat"
 /******************************************************************/
-void readplayer(std::fstream &f)
+void show_player_scores(std::fstream &f)
 {
-	long total=filesize(f);
+	long total=player_record_count(f);
 	if(total<=0)
 	{
 		wclear(win);
@@ -545,7 +545,7 @@ void readplayer(std::fstream &f)
 		int page_count=static_cast<int>(total-start);
 		if(page_count>per_page)
 			page_count=per_page;
-		show(f,start,page_count);
+		render_highscore_page(f,start,page_count);
 	}
 	return;
 }
@@ -553,11 +553,11 @@ void readplayer(std::fstream &f)
 //FUNCTION TO SORT RECORDS IN DESCENDING ORDER OF SCORES TO THE FILE
 //"player.dat"
 /******************************************************************/
-void sortplayer(std::fstream &f)
+void sort_player_scores(std::fstream &f)
 {
 	player pl1,pl2;
 	long pos1,pos2,fs;
-	fs=filesize(f);
+	fs=player_record_count(f);
 	f.open("player.dat",std::ios::in|std::ios::out|std::ios::binary);
 	for(int i=0;i<fs-1;i++)
 		for(int j=0;j<fs-i-1;j++)
@@ -654,10 +654,10 @@ int main()
 		{
 			case '1' : searchfile(f,l,a,w);
 					   play(a,w,l);break;
-			case '2' : readplayer(f);break;
+			case '2' : show_player_scores(f);break;
 			case '3' : continuegame(a,w,l);
 					   play(a,w,l);break;
-			case '4' : std::cout<<"\nEnter ";set_level(l);break;
+			case '4' : std::cout<<"\nEnter ";prompt_level(l);break;
 			case '5' : instructions();break;
 			case '6' : write(f);break; 		       	//NEW FUNC
 			case '7' : readfile(f);break;
@@ -697,7 +697,7 @@ void endgame(int a[m][m],int w[m][m],int level)
 			if(!(w[i][j]>=1 && w[i][j]<=9))
 			{
 				c=w[i][j];
-				final_board[i][j]=convert(c);
+				final_board[i][j]=char_to_digit(c);
 				if(final_board[i][j]>=1 && final_board[i][j]<=9)
 					display_board[i][j]=c;
 				else
@@ -714,7 +714,7 @@ void endgame(int a[m][m],int w[m][m],int level)
 	move_xy(2,2);
 	wclrtoeol(win);
 	wprintw(win,"Press any key to view solution...");
-	display(display_board);
+	render_board(display_board);
 	move_xy(2,1);
 	wprintw(win,"YOUR FINAL ANSWER");
 	move_xy(2,2);
@@ -734,7 +734,7 @@ void endgame(int a[m][m],int w[m][m],int level)
 	move_xy(2,2);
 	wclrtoeol(win);
 	wprintw(win,"Press any key to continue...");
-	display(s);
+	render_board(s);
 	move_xy(2,1);
 	wprintw(win,"SOLUTION");
 	move_xy(2,2);
@@ -742,14 +742,14 @@ void endgame(int a[m][m],int w[m][m],int level)
 	wrefresh(win);
 	wgetch(win);
 	//delay(1000);
-	writeplayer(f,a,final_board,level);
-	sortplayer(f);
-	readplayer(f);
+	append_player_score(f,a,final_board,level);
+	sort_player_scores(f);
+	show_player_scores(f);
 }
 /******************************************************************/
 //FUNCTION TO ALLOW USER TO SET LEVEL FOR SUDOKU
 /******************************************************************/
-void set_level(int &level)
+void prompt_level(int &level)
 {
 	std::cout<<"Level : ";
 	std::cin>>level;
@@ -781,7 +781,7 @@ void play(int a[m][m],int w[m][m],int level)
 				if(c=='z'+1)
 					c='!';
 			}
-	display(w);
+	render_board(w);
 	move_xy(1,3);
 	wclrtoeol(win);
 	wprintw(win,"END the GAME [~]");
@@ -953,14 +953,14 @@ void enterin(int a[m][m])
 {
 	char c;
 	int p=30;
-	box(p);
+	draw_sudoku_grid(p);
 	int i,j;
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
 		{
 			move_xy(((j+1)*2)+p,((i+1)*2)+p);
 			c=getchar();
-			a[i][j]=convert(c);
+			a[i][j]=char_to_digit(c);
 			if(a[i][j]>=1 && a[i][j]<=9)
 				wprintw(win,"%d",a[i][j]);
 			else
@@ -971,12 +971,12 @@ void enterin(int a[m][m])
 /******************************************************************/
 //FUNCTION TO DISPLAY THE ELEMENTS OF SUDOKU IN THE BOX
 /******************************************************************/
-void display(int a[m][m])
+void render_board(int a[m][m])
 {
 	int p=3;
 	char c;
 	style_normal();
-	box(p);
+	draw_sudoku_grid(p);
 	int i,j;
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
@@ -1040,7 +1040,7 @@ void logic(int a[m][m], int z[m*m][m])
 						if(z[(m*i)+j][y]!=0)
 							c[(m*i)+j]++;
 					/*
-					//Calculational display unit
+					//Calculational render_board unit
 					{
 					std::cout<<"("<<i<<j<<")";
 					for(y=0;y<m;y++)
@@ -1229,7 +1229,7 @@ int sumer(int s[m][m])
 /******************************************************************/
 //FUNCTION TO CREATE A BOX FOR DISPLAYING SUDOKU
 /******************************************************************/
-void box(int p)
+void draw_sudoku_grid(int p)
 {
 	unsigned char co1=201,co2=187,co3=200,co4=188;
 	unsigned char cr1=206,cr2=216,cr3=215,cr4=197;
@@ -1240,35 +1240,35 @@ void box(int p)
 		for(int j=1;j<=m*2+1;j++)
 			if(i%2!=0)
 			{
-				prt(i+p,j+p,sr4);prt(j+p,i+p,sr3);
+				draw_grid_char(i+p,j+p,sr4);draw_grid_char(j+p,i+p,sr3);
 				if((i-1)%3==0)
-				{prt(i+p,j+p,sr2);prt(j+p,i+p,sr1);}
+				{draw_grid_char(i+p,j+p,sr2);draw_grid_char(j+p,i+p,sr1);}
 			}
 	for(int i=1;i<=m*2+1;i++)
 		for(int j=1;j<=m*2+1;j++)
 			if(i%2!=0 && j%2!=0)
 			{
 				if(i<=j)
-				{prt(i+p,j+p,cr4);prt(j+p,i+p,cr4);}
+				{draw_grid_char(i+p,j+p,cr4);draw_grid_char(j+p,i+p,cr4);}
 				if((i-1)%3==0)
 				{
-					prt(i+p,j+p,cr2);prt(j+p,i+p,cr3);
+					draw_grid_char(i+p,j+p,cr2);draw_grid_char(j+p,i+p,cr3);
 					if(i==1)
 					{
-						prt(i+p,j+p,ts2);prt(j+p,i+p,ts1);
+						draw_grid_char(i+p,j+p,ts2);draw_grid_char(j+p,i+p,ts1);
 						if((j-1)%3==0)
-						{prt(i+p,j+p,td3);prt(j+p,i+p,td1);}
+						{draw_grid_char(i+p,j+p,td3);draw_grid_char(j+p,i+p,td1);}
 					}
 					if(i==m*2+1)
 					{
-						prt(i+p,j+p,ts3);prt(j+p,i+p,ts4);
+						draw_grid_char(i+p,j+p,ts3);draw_grid_char(j+p,i+p,ts4);
 						if((j-1)%3==0)
-						{prt(i+p,j+p,td4);prt(j+p,i+p,td2);}
+						{draw_grid_char(i+p,j+p,td4);draw_grid_char(j+p,i+p,td2);}
 					}
 					if((j-1)%3==0)
 					{
 						if(i<=j)
-						{prt(i+p,j+p,cr1);prt(j+p,i+p,cr1);}
+						{draw_grid_char(i+p,j+p,cr1);draw_grid_char(j+p,i+p,cr1);}
 					}
 				}
 			}
@@ -1278,19 +1278,19 @@ void box(int p)
 			{
 				if(i<j && j!=m*2+1)
 					if(i==1)
-						prt(i+p,j+p,td3);
+						draw_grid_char(i+p,j+p,td3);
 					else
-						prt(i+p,j+p,cr1);
+						draw_grid_char(i+p,j+p,cr1);
 				if(i>j && i!=m*2+1)
 					if(j==1)
-						prt(i+p,j+p,td1);
+						draw_grid_char(i+p,j+p,td1);
 					else
-						prt(i+p,j+p,cr1);
+						draw_grid_char(i+p,j+p,cr1);
 			}
-	prt(1+p,1+p,co1);
-	prt(1+p,m*2+1+p,co2);
-	prt(m*2+1+p,1+p,co3);
-	prt(m*2+1+p,m*2+1+p,co4);
+	draw_grid_char(1+p,1+p,co1);
+	draw_grid_char(1+p,m*2+1+p,co2);
+	draw_grid_char(m*2+1+p,1+p,co3);
+	draw_grid_char(m*2+1+p,m*2+1+p,co4);
 }
 /******************************************************************/
 //FUNCTION TO CREATE A CIRCLE AND DISPLAY THE INTRODUCTION
@@ -1307,9 +1307,9 @@ void intro()
 				x1=40+pow((pow(r,2)-pow((y-25),2)),0.5);
 				x2=40-pow((pow(r,2)-pow((y-25),2)),0.5);
 				//delay(10);
-				prt(y,x1,c);
+				draw_grid_char(y,x1,c);
 				//delay(10);
-				prt(y,x2,c);
+				draw_grid_char(y,x2,c);
 			}
 	for(r=20;r<=23;r++)
 		for(y=1;y<=80;y++)
@@ -1318,9 +1318,9 @@ void intro()
 				x1=25+pow((pow(r,2)-pow((y-40),2)),0.5);
 				x2=25-pow((pow(r,2)-pow((y-40),2)),0.5);
 				//delay(10);
-				prt(x1,y,c);
+				draw_grid_char(x1,y,c);
 				//delay(10);
-				prt(x2,y,c);
+				draw_grid_char(x2,y,c);
 			}
 	move_xy(33,23);std::cout<<"| S U D O K U |";
 	//delay(1000);
@@ -1336,7 +1336,7 @@ void intro()
 /******************************************************************/
 //FUNCTION TO CONVERT A CHARACTER TO AN INTEGER (0 TO 9)
 /******************************************************************/
-int convert(char c)
+int char_to_digit(char c)
 {
 	int t;
 	switch(c)
@@ -1393,7 +1393,7 @@ static const char* cp437_box_to_utf8(unsigned char c)
 	}
 }
 
-void prt(int i,int j,char c)
+void draw_grid_char(int i,int j,char c)
 {
 	unsigned char uc=static_cast<unsigned char>(c);
 	style_normal();
@@ -1418,28 +1418,28 @@ void table(int n)
 		for(int j=1;j<=80;j++)
 		{
 			if(i%2!=0)
-				prt(i,j,hr);
+				draw_grid_char(i,j,hr);
 			if(j==1||j==80||j==60)
 			{
-				prt(i,j,vr);
+				draw_grid_char(i,j,vr);
 				if(j==1 && i%2!=0)
-					prt(i,j,t3);
+					draw_grid_char(i,j,t3);
 				if(j==80 && i%2!=0)
-					prt(i,j,t4);
+					draw_grid_char(i,j,t4);
 			}
 			if(i%2!=0 && j==60)
 			{
-				prt(i,j,cr);
+				draw_grid_char(i,j,cr);
 				if(i==3)
-					prt(i,j,t1);
+					draw_grid_char(i,j,t1);
 				if(i==n*2+3)
-					prt(i,j,t2);
+					draw_grid_char(i,j,t2);
 			}
 		}
-	prt(3,1,co1);
-	prt(3,80,co2);
-	prt(n*2+3,80,co4);
-	prt(n*2+3,1,co3);
+	draw_grid_char(3,1,co1);
+	draw_grid_char(3,80,co2);
+	draw_grid_char(n*2+3,80,co4);
+	draw_grid_char(n*2+3,1,co3);
 	move_xy(65,49);
 	std::cout<<"Continue........";
 }
@@ -1456,7 +1456,7 @@ void create(int a[m][m])
 			a[i][j]=0;
 			s[i][j]=0;
 		}
-	box(30);
+	draw_sudoku_grid(30);
 	while(check(a)!=0)
 	{
 		i=rand()%9+0;
@@ -1503,7 +1503,7 @@ void create(int a[m][m])
 			}
 		}
 	}
-	display2(a);
+	render_preview_board(a);
 	do
 	{
 		i=rand()%9+0;
@@ -1512,13 +1512,13 @@ void create(int a[m][m])
 		{
 			u=a[i][j];
 			a[i][j]=0;
-			display2(a);
+			render_preview_board(a);
 			solve(a,s);
 		}
 	}
 	while(verify(s)==0 && sumer(s)==0);
 	a[i][j]=u;
-	display2(a);
+	render_preview_board(a);
 	std::cout<<"\nCOMPLETED!!";
 }
 void write(std::fstream &f)
@@ -1542,7 +1542,7 @@ void write(std::fstream &f)
 	f.close();
 	return;
 }
-void display2(int a[m][m])
+void render_preview_board(int a[m][m])
 {
 	int p=30;
 	char c;
