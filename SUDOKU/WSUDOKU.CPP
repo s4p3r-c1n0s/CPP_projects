@@ -12,10 +12,90 @@ g++ -lncursesw WSUDOKU.CPP
 #include<cstdio>
 #include<cstdlib>
 #include<cstring>
+#include<cctype>
+#include<ctime>
+#include<unistd.h>
+#include<vector>
 /******************************************************************/
 const int m=9,v=22;
 WINDOW* win;
+const char* const kSudokuFile="sudoku.dat";
+bool g_has_colors=false;
+const short kPairNormal=1;
+const short kPairEntry=2;
+const short kPairPlaceholder=3;
+inline void init_ui_colors()
+{
+	if(!has_colors())
+		return;
+	start_color();
+#ifdef NCURSES_VERSION
+	use_default_colors();
+#endif
+	init_pair(kPairNormal,COLOR_WHITE,-1);
+	init_pair(kPairEntry,COLOR_RED,-1);
+	init_pair(kPairPlaceholder,COLOR_BLUE,-1);
+	g_has_colors=true;
+}
+inline void style_normal()
+{
+	if(g_has_colors)
+		wattrset(win,COLOR_PAIR(kPairNormal));
+	else
+		wattrset(win,A_NORMAL);
+}
+inline void style_entry()
+{
+	if(g_has_colors)
+		wattrset(win,COLOR_PAIR(kPairEntry)|A_BOLD);
+	else
+		wattrset(win,A_BOLD);
+}
+inline void style_placeholder()
+{
+	if(g_has_colors)
+		wattrset(win,COLOR_PAIR(kPairPlaceholder)|A_BOLD);
+	else
+		wattrset(win,A_BOLD);
+}
+inline void style_for_cell(int val)
+{
+	if(val>9)
+	{
+		char c=static_cast<char>(val);
+		if(c>='1' && c<='9')
+			style_entry();
+		else
+			style_placeholder();
+		return;
+	}
+	style_normal();
+}
+inline void move_xy(int x,int y)
+{
+	int rows=0,cols=0;
+	getmaxyx(win,rows,cols);
+	if(rows<=0 || cols<=0)
+		return;
+	if(x<0) x=0;
+	if(y<0) y=0;
+	if(x>=cols) x=cols-1;
+	if(y>=rows) y=rows-1;
+	wmove(win,y,x);
+}
+inline void seed_rng_once()
+{
+	static bool seeded=false;
+	if(seeded)
+		return;
+	unsigned int seed=static_cast<unsigned int>(std::time(nullptr));
+	seed^=static_cast<unsigned int>(std::clock());
+	seed^=static_cast<unsigned int>(getpid());
+	std::srand(seed);
+	seeded=true;
+}
 /******************************************************************/
+class sudoku;
 long score(int a[m][m],int w[m][m],int level);
 void solve(int a[m][m],int s[m][m]);
 void logic(int a[m][m], int z[m*m][m]);
@@ -37,6 +117,8 @@ void instructions();
 void write(std::fstream &f);			//NEW FUNC
 void create(int a[m][m]);   			//NEW FUNC
 void display2(int a[m][m]);      		//NEW FUNC
+int usable_puzzle(sudoku &su,int required_level=0);
+void ensure_sudoku_file_layout();
 /******************************************************************/
 //CLASS NAME : sudoku
 //DETAILS : IT GROUPS ALL THE ELEMENTS RELATED TO A SUDOKU
@@ -101,11 +183,12 @@ void writefile(std::fstream &f)
 {
 	sudoku su;
 	char ch='Y';
-	f.open("sudoku.dat",std::ios::binary|std::ios::in);
+	ensure_sudoku_file_layout();
+	f.open(kSudokuFile,std::ios::binary|std::ios::in);
 	f.seekg(0,std::ios::end);
 	long sz=f.tellg()/sizeof(su);
 	f.close();
-	f.open("sudoku.dat",std::ios::binary|std::ios::app);
+	f.open(kSudokuFile,std::ios::binary|std::ios::app);
 	while(ch=='Y')
 	{
 		su.input(sz+1);
@@ -128,7 +211,8 @@ void searchlevel(std::fstream &f)
 	sudoku su;
 	std::cout<<"Enter ";
 	set_level(l);
-	f.open("sudoku.dat",std::ios::binary|std::ios::in);
+	ensure_sudoku_file_layout();
+	f.open(kSudokuFile,std::ios::binary|std::ios::in);
 	while(f.read((char*)(&su),sizeof(su)))
 		if(su.r_level()==l)
 		{
@@ -146,7 +230,8 @@ void searchlevel(std::fstream &f)
 void readfile(std::fstream &f)
 {
 	sudoku su;
-	f.open("sudoku.dat",std::ios::binary|std::ios::in);
+	ensure_sudoku_file_layout();
+	f.open(kSudokuFile,std::ios::binary|std::ios::in);
 	while(f.read((char*)(&su),sizeof(su)))
 	{
 		system("clear");
@@ -165,7 +250,8 @@ void editfile(std::fstream &f)
 	system("clear");
 	int s_no;
 	sudoku su;
-	f.open("sudoku.dat",std::ios::binary|std::ios::in|std::ios::out);
+	ensure_sudoku_file_layout();
+	f.open(kSudokuFile,std::ios::binary|std::ios::in|std::ios::out);
 	f.seekg(0,std::ios::end);
 	long sz=f.tellg()/sizeof(su);
 	f.seekg(0);
@@ -189,50 +275,89 @@ void editfile(std::fstream &f)
 	f.close();
 	return;
 }
+
+int usable_puzzle(sudoku &su,int required_level)
+{
+	if(su.r_level()<1 || su.r_level()>5)
+		return 0;
+	if(required_level!=0 && su.r_level()!=required_level)
+		return 0;
+	int clues=0;
+	for(int i=0;i<m;i++)
+		for(int j=0;j<m;j++)
+		{
+			int val=su.r_a(i,j);
+			if(val<0 || val>9)
+				return 0;
+			if(val!=0)
+				clues++;
+		}
+	// Avoid trivially empty/corrupt boards.
+	return (clues>=17 && clues<=80);
+}
+
+void ensure_sudoku_file_layout()
+{
+	std::fstream f(kSudokuFile,std::ios::in|std::ios::binary);
+	if(!f)
+		return;
+	f.seekg(0,std::ios::end);
+	long sz=f.tellg();
+	f.close();
+	if(sz<0 || (sz%sizeof(sudoku))==0)
+		return;
+
+	// Incompatible layout detected: recreate a clean modern data file.
+	std::fstream fresh(kSudokuFile,std::ios::out|std::ios::binary|std::ios::trunc);
+	fresh.close();
+}
 /******************************************************************/
 //FUNCTION TO RANDOMLY SEARCH RECORDS FROM THE FILE "sudoku.dat"
 /******************************************************************/
 void searchfile(std::fstream &f,int level,int a[m][m],int w[m][m])
 {
 	sudoku su;
-	int x[20],pos=0;
-	f.open("sudoku.dat",std::ios::in|std::ios::binary);
+	std::vector<long> records;
+	ensure_sudoku_file_layout();
+	f.open(kSudokuFile,std::ios::in|std::ios::binary);
 	if(!f)
 	{
 		wclear(win);
 		box(win,0,0);
-		wmove(win,2,2);
+		move_xy(2,2);
 		wprintw(win,"Unable to open sudoku.dat");
-		wmove(win,2,4);
+		move_xy(2,4);
 		wprintw(win,"Press ENTER to continue...");
 		wrefresh(win);
 		getchar();
 		return;
 	}
+	long rec_no=0;
 	while(f.read((char*)(&su),sizeof(su)))
-		if(su.r_level()==level)
-		{
-			if(pos<20)
-				x[pos++]=su.r_sno();
-		}
+	{
+		if(usable_puzzle(su,level))
+			records.push_back(rec_no);
+		rec_no++;
+	}
 	f.close();
-	if(pos==0)
+	if(records.empty())
 	{
 		wclear(win);
 		box(win,0,0);
-		wmove(win,2,2);
-		wprintw(win,"No puzzle found for level %d.",level);
-		wmove(win,2,4);
+		move_xy(2,2);
+		wprintw(win,"No valid puzzle found for level %d.",level);
+		move_xy(2,4);
 		wprintw(win,"Use option 6 to create puzzles or option 4 to change level.");
-		wmove(win,2,6);
+		move_xy(2,6);
 		wprintw(win,"Press ENTER to continue...");
 		wrefresh(win);
 		getchar();
 		return;
 	}
-	f.open("sudoku.dat",std::ios::in|std::ios::binary);
-	random();
-	f.seekg(sizeof(su)*(x[rand()%pos]-1));
+	f.open(kSudokuFile,std::ios::in|std::ios::binary);
+	seed_rng_once();
+	long pick=records[rand()%records.size()];
+	f.seekg(sizeof(su)*pick);
 	f.read((char*)(&su),sizeof(su));
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
@@ -259,11 +384,11 @@ class player
 	/******************************************************************/
 	void output(int i,int j)
 	{
-		wmove(win,2,(4+(j*2)));
+		move_xy(2,(4+(j*2)));
 		std::cout<<1+j+(i*v)<<'.';
-		wmove(win,6,(4+(j*2)));
+		move_xy(6,(4+(j*2)));
 		puts(name);
-		wmove(win,61,(4+(j*2)));
+		move_xy(61,(4+(j*2)));
 		std::cout<<scr;
 	}
 	/******************************************************************/
@@ -273,22 +398,37 @@ class player
 	{
 		return scr;
 	}
+	const char* r_name() const
+	{
+		return name;
+	}
 };
 /******************************************************************/
 //FUNCTION TO ACCEPT THE VALUES OF THE DATA MEMBERS OF CLASS player
 /******************************************************************/
 void player::input(int a[m][m],int w[m][m],int level)
 {
-	system("clear");
-	std::cout<<"Enter Your name : ";
-	gets(name);
+	wclear(win);
+	box(win,0,0);
+	move_xy(2,2);
+	wprintw(win,"Enter Your name : ");
+	wrefresh(win);
+	echo();
+	wgetnstr(win,name,sizeof(name)-1);
+	noecho();
+	if(name[0]=='\0')
+		std::strcpy(name,"PLAYER");
 	for(int i=0;i<strlen(name);i++)
 		name[i]=toupper(name[i]);
-	wmove(win,19,1);
-	puts(name);
+	move_xy(2,4);
+	wprintw(win,"%s",name);
 	scr=score(a,w,level);
-	std::cout<<"Your SCORE : "<<scr;
-	getchar();
+	move_xy(2,6);
+	wprintw(win,"Your SCORE : %ld",scr);
+	move_xy(2,8);
+	wprintw(win,"Press any key to continue...");
+	wrefresh(win);
+	wgetch(win);
 }
 /******************************************************************/
 //FUNCTION TO INPUT RECORDS TO THE FILE "player.dat"
@@ -305,21 +445,66 @@ void writeplayer(std::fstream &f,int a[m][m],int w[m][m],int level)
 /******************************************************************/
 //FUNCTION TO DISPLAY A SET OF 22 RECORD FROM THE FILE "player.dat"
 /******************************************************************/
-void show(std::fstream &f,int i,int n=v)
+void show(std::fstream &f,long start,int n=v)
 {
-	system("clear");
 	player pl;
+	int rows=0,cols=0;
+	getmaxyx(win,rows,cols);
+	const int left=2;
+	const int right=cols-3;
+	const int title_y=1;
+	const int info_y=2;
+	const int header_y=4;
+	const int first_row_y=6;
+	const int rank_w=6;
+	const int score_w=12;
+	int name_w=(right-left+1)-rank_w-score_w-4;
+	if(name_w<8)
+		name_w=8;
+	const int name_x=left+rank_w+1;
+	int score_x=name_x+name_w+1;
+	if(score_x>right-score_w+1)
+		score_x=right-score_w+1;
+	if(score_x<name_x+1)
+		score_x=name_x+1;
+
+	wclear(win);
+	box(win,0,0);
+	style_normal();
+	move_xy(left,title_y);
+	wprintw(win,"HIGHSCORES");
+	move_xy(left,info_y);
+	wprintw(win,"Entries %ld to %ld",start+1,start+n);
+	move_xy(left,header_y);
+	wprintw(win,"RANK");
+	move_xy(name_x,header_y);
+	wprintw(win,"NAME");
+	move_xy(score_x,header_y);
+	wprintw(win,"SCORE");
+	mvwhline(win,header_y+1,left,'-',right-left+1);
+
 	f.open("player.dat",std::ios::in|std::ios::binary);
-	table(n);
 	for(int j=0;j<n;j++)
 	{
-		f.seekg((j+(i*v))*sizeof(pl));
-		f.read((char*)&pl,sizeof(pl));
-		pl.output(i,j);
-		//delay(200);
+		int y=first_row_y+j;
+		if(y>=rows-2)
+			break;
+		f.seekg((start+j)*sizeof(pl));
+		if(!f.read((char*)&pl,sizeof(pl)))
+			break;
+		move_xy(left,y);
+		wprintw(win,"%4ld",start+j+1);
+		move_xy(name_x,y);
+		wprintw(win,"%-*.*s",name_w,name_w,pl.r_name());
+		move_xy(score_x,y);
+		wprintw(win,"%10ld",pl.r_scr());
 	}
 	f.close();
-	getchar();
+	move_xy(left,rows-2);
+	wclrtoeol(win);
+	wprintw(win,"Press any key to continue...");
+	wrefresh(win);
+	wgetch(win);
 }
 /******************************************************************/
 //FUNCTION TO RETURN THE NO. OF RECORDS STORED IN FILE "player.dat"
@@ -337,11 +522,31 @@ long filesize(std::fstream &f)
 /******************************************************************/
 void readplayer(std::fstream &f)
 {
-	int i;
-	for(i=0;i<filesize(f)/v;i++)
-		show(f,i);
-	if(filesize(f)%v!=0)
-		show(f,i,filesize(f)%v);
+	long total=filesize(f);
+	if(total<=0)
+	{
+		wclear(win);
+		box(win,0,0);
+		move_xy(2,2);
+		wprintw(win,"No highscores yet.");
+		move_xy(2,4);
+		wprintw(win,"Press any key to continue...");
+		wrefresh(win);
+		wgetch(win);
+		return;
+	}
+	int rows=0,cols=0;
+	getmaxyx(win,rows,cols);
+	int per_page=rows-8;
+	if(per_page<1)
+		per_page=1;
+	for(long start=0;start<total;start+=per_page)
+	{
+		int page_count=static_cast<int>(total-start);
+		if(page_count>per_page)
+			page_count=per_page;
+		show(f,start,page_count);
+	}
 	return;
 }
 /******************************************************************/
@@ -385,8 +590,8 @@ void savegame(int a[m][m],int w[m][m],int level)
 			if(!((w[i][j]>='1'&& w[i][j]<='9')||(w[i][j]>=1 && w[i][j]<=9)))
 				w[i][j]=0;
 	f.open("continue.dat",std::ios::out|std::ios::binary);
-	f.write((char*)&a,sizeof(a));
-	f.write((char*)&w,sizeof(w));
+	f.write((char*)a,sizeof(int)*m*m);
+	f.write((char*)w,sizeof(int)*m*m);
 	f.write((char*)&level,sizeof(level));
 	f.close();
 }
@@ -397,8 +602,8 @@ void continuegame(int a[m][m],int w[m][m],int &level)
 {
 	std::fstream f;
 	f.open("continue.dat",std::ios::in|std::ios::binary);
-	f.read((char*)&a,sizeof(a));
-	f.read((char*)&w,sizeof(w));
+	f.read((char*)a,sizeof(int)*m*m);
+	f.read((char*)w,sizeof(int)*m*m);
 	f.read((char*)&level,sizeof(level));
 	f.close();
 }
@@ -413,13 +618,21 @@ int main()
 	player pl;
 	int s[m][m],w[m][m],l=1,a[m][m];
 	unsigned char u;
+	const char* term=getenv("TERM");
+	if(term==nullptr || strcmp(term,"dumb")==0)
+		setenv("TERM","xterm-256color",0);
 	setlocale(LC_ALL, "");
 	
 	initscr();
 	cbreak();
 	noecho();
+	init_ui_colors();
+	curs_set(1);
+	int rows,cols;
+	getmaxyx(stdscr,rows,cols);
 	refresh();
-	win = newwin(56, 180, 0, 0);
+	win = newwin(rows, cols, 0, 0);
+	style_normal();
 	box(win, 0, 0);
 	//textcolor(WHITE);
 	//intro();
@@ -462,7 +675,7 @@ int main()
 void instructions()
 {
 	system("clear");
-	wmove(win,20,20);
+	move_xy(20,20);
 	std::cout<<"I  N  S  T  R  U  C  T  I  O  N  S\n\n\n";
 	std::cout<<"\nFill the Grid so that every row, column & 3x3 box ";
 	std::cout<<"contains digits 1-9\n\nEach puzzle has 1 correct solution";
@@ -475,34 +688,61 @@ void endgame(int a[m][m],int w[m][m],int level)
 {
 	std::fstream f;
 	char c;
-	int s[m][m];
+	int final_board[m][m],display_board[m][m],s[m][m];
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
 		{
+			display_board[i][j]=w[i][j];
+			final_board[i][j]=w[i][j];
 			if(!(w[i][j]>=1 && w[i][j]<=9))
 			{
 				c=w[i][j];
-				w[i][j]=convert(c);
+				final_board[i][j]=convert(c);
+				if(final_board[i][j]>=1 && final_board[i][j]<=9)
+					display_board[i][j]=c;
+				else
+					display_board[i][j]=0;
 			}
-			if(!(w[i][j]>=1 && w[i][j]<=9))
-				w[i][j]=0;
+			if(!(final_board[i][j]>=1 && final_board[i][j]<=9))
+				final_board[i][j]=0;
 		}
-	system("clear");
-	wmove(win,25,20);
-	std::cout<<"Y O U R   F I N A L   A N S W E R";
-	display(w);
+	wclear(win);
+	box(win,0,0);
+	move_xy(2,1);
+	wclrtoeol(win);
+	wprintw(win,"YOUR FINAL ANSWER");
+	move_xy(2,2);
+	wclrtoeol(win);
+	wprintw(win,"Press any key to view solution...");
+	display(display_board);
+	move_xy(2,1);
+	wprintw(win,"YOUR FINAL ANSWER");
+	move_xy(2,2);
+	wprintw(win,"Press any key to view solution...");
+	wrefresh(win);
+	wgetch(win);
 	//delay(1000);
 	do
 	{
 		solve(a,s);
 	}while(verify(s)!=0 && sumer(s)!=0);
-	system("clear");
-	wmove(win,27,20);
-	std::cout<<"S   O   L   U   T   I   O   N";
+	wclear(win);
+	box(win,0,0);
+	move_xy(2,1);
+	wclrtoeol(win);
+	wprintw(win,"SOLUTION");
+	move_xy(2,2);
+	wclrtoeol(win);
+	wprintw(win,"Press any key to continue...");
 	display(s);
-	getchar();
+	move_xy(2,1);
+	wprintw(win,"SOLUTION");
+	move_xy(2,2);
+	wprintw(win,"Press any key to continue...");
+	wrefresh(win);
+	wgetch(win);
 	//delay(1000);
-	writeplayer(f,a,w,level);
+	writeplayer(f,a,final_board,level);
 	sortplayer(f);
 	readplayer(f);
 }
@@ -527,30 +767,34 @@ void play(int a[m][m],int w[m][m],int level)
 	wclear(win);	
 	box(win,0,0);	
 	wrefresh(win);	
-	char ch,c='A',e;
-	int p=30,n,x,y;
+	char ch,c='A',e='!';
+	int p=3,n,x=0,y=0;
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
 			if(w[i][j]==0)
 			{
 				w[i][j]=c;
+				e=c;
 				c++;
 				if(c=='Z'+1)
 					c='a';
 				if(c=='z'+1)
 					c='!';
-				e=c;
 			}
 	display(w);
-	wmove(win,1,50);
+	move_xy(1,3);
+	wclrtoeol(win);
 	wprintw(win,"END the GAME [~]");
-	wmove(win,1,4);
+	move_xy(1,2);
+	wclrtoeol(win);
 	wprintw(win,"LEVEL : ");
 	for(int u=0;u<level;u++)
 		wprintw(win,"* ");
-	wmove(win,60,50);
+	move_xy(42,3);
+	wclrtoeol(win);
 	wprintw(win,"CONTINUE later [0]");
-	wmove(win,1,1);
+	move_xy(1,1);
+	wclrtoeol(win);
 	wprintw(win,"Enter CHOICE : ");
 	wrefresh(win);
 	for(;;)
@@ -569,42 +813,76 @@ void play(int a[m][m],int w[m][m],int level)
 		else if(ch>='1' && ch<='9')
 		{
 			c='0';
+			int found=0;
 			for(int i=0;i<m;i++)
 			{
 				for(int j=0;j<m;j++)
 					if(w[i][j]==ch)
 					{
-						wmove(win,((j+1)*2)+p,((i+1)*2)+p);
+						found=1;
+						move_xy(((j+1)*2)+p,((i+1)*2)+p);
 						c=getchar();
-						if(c>='1' && c<='9')
-						{
-							w[i][j]=c;
-							//textcolor(RED);
-							printw("%c",c);
-							wmove(win,16,1);
-							break;
-						}
+							if(c>='1' && c<='9')
+							{
+								w[i][j]=c;
+								style_entry();
+								waddch(win,c);
+								style_normal();
+								move_xy(16,1);
+								wrefresh(win);
+								break;
+							}
 					}
 				if(c>='1' && c<='9')
 					break;
 			}
-			wmove(win,16,1);
+			if(found==0)
+			{
+				move_xy(16,1);
+				wprintw(win,"No cell tagged %c",ch);
+				wclrtoeol(win);
+				wrefresh(win);
+			}
+			move_xy(16,1);
 		}
 		else if((ch>='a'&& ch<='z')||(ch>='A'&& ch<='Z')||(ch>='!'&& ch<=e))
 		{
+			int found=0;
 			for(int i=0;i<m;i++)
+			{
 				for(int j=0;j<m;j++)
+				{
 					if(w[i][j]==ch)
-					{x=i;y=j;}
-			wmove(win,((y+1)*2)+p,((x+1)*2)+p);
+					{
+						x=i;
+						y=j;
+						found=1;
+						break;
+					}
+				}
+				if(found)
+					break;
+			}
+			if(found==0)
+			{
+				move_xy(16,1);
+				wprintw(win,"No cell tagged %c",ch);
+				wclrtoeol(win);
+				wrefresh(win);
+				continue;
+			}
+			move_xy(((y+1)*2)+p,((x+1)*2)+p);
+			wrefresh(win);
 			c=getchar();
-			while(!(c>='1' && c<='9'))
-				c=getchar();
-			w[x][y]=c;
-			//textcolor(RED);
-			printw("%c",c);
-			wmove(win,16,1);
-		}
+				while(!(c>='1' && c<='9'))
+					c=getchar();
+				w[x][y]=c;
+				style_entry();
+				waddch(win,c);
+				style_normal();
+				move_xy(16,1);
+				wrefresh(win);
+			}
 	}
 	//textcolor(WHITE);
 }
@@ -680,14 +958,15 @@ void enterin(int a[m][m])
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
 		{
-			wmove(win,((j+1)*2)+p,((i+1)*2)+p);
+			move_xy(((j+1)*2)+p,((i+1)*2)+p);
 			c=getchar();
 			a[i][j]=convert(c);
 			if(a[i][j]>=1 && a[i][j]<=9)
-				std::cout<<a[i][j];
+				wprintw(win,"%d",a[i][j]);
 			else
-				std::cout<<' ';
+				waddch(win,' ');
 		}
+	wrefresh(win);
 }
 /******************************************************************/
 //FUNCTION TO DISPLAY THE ELEMENTS OF SUDOKU IN THE BOX
@@ -696,36 +975,41 @@ void display(int a[m][m])
 {
 	int p=3;
 	char c;
+	style_normal();
 	box(p);
 	int i,j;
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
 		{
-			wmove(win,((j+1)*2)+p,((i+1)*2)+p);
+			move_xy(((j+1)*2)+p,((i+1)*2)+p);
 			//delay(50);
 			if(a[i][j]>9)
 			{
 				c=a[i][j];
 				if(c>='1' && c<='9')
 				{
-					//textcolor(RED);
-					printw("%c",c);
+					style_entry();
+					waddch(win,c);
 				}
 				else
 				{
-					//textcolor(BLUE);
-					printw("%c",c);
+					style_placeholder();
+					waddch(win,c);
 				}
 			}
 			else if(a[i][j]==0)
+			{
+				style_normal();
 				waddch(win,' ');
+			}
 			else
 			{
-				//textcolor(WHITE);
-				printw("%d",a[i][j]);
+				style_normal();
+				wprintw(win,"%d",a[i][j]);
 			}
 		}
-	//textcolor(WHITE);
+	style_normal();
+	wrefresh(win);
 }
 /******************************************************************/
 //FUNCTION TO SOLVE A SUDOKU USING THREE LOGICS
@@ -1038,15 +1322,15 @@ void intro()
 				//delay(10);
 				prt(x2,y,c);
 			}
-	wmove(win,33,23);std::cout<<"| S U D O K U |";
+	move_xy(33,23);std::cout<<"| S U D O K U |";
 	//delay(1000);
-	wmove(win,28,20);std::cout<<"C + +   P R O J E C T   O N";
-	wmove(win,33,22);std::cout<<"---------------";
-	wmove(win,33,24);std::cout<<"---------------";
+	move_xy(28,20);std::cout<<"C + +   P R O J E C T   O N";
+	move_xy(33,22);std::cout<<"---------------";
+	move_xy(33,24);std::cout<<"---------------";
 	//delay(1000);
-	wmove(win,32,31);std::cout<<"B Y   :   U M A N G";
+	move_xy(32,31);std::cout<<"B Y   :   U M A N G";
 	//delay(1000);
-	wmove(win,32,33);std::cout<<"Btech : 1st SEM";
+	move_xy(32,33);std::cout<<"Btech : 1st SEM";
 	getchar();
 }
 /******************************************************************/
@@ -1073,10 +1357,51 @@ int convert(char c)
 /******************************************************************/
 //FUNCTION TO PRINT A CHARACTER AT A SPECIFIC LOCATION ON SCREEN
 /******************************************************************/
+static const char* cp437_box_to_utf8(unsigned char c)
+{
+	switch(c)
+	{
+		case 179: return u8"│";
+		case 180: return u8"┤";
+		case 182: return u8"╢";
+		case 185: return u8"╣";
+		case 186: return u8"║";
+		case 187: return u8"╗";
+		case 188: return u8"╝";
+		case 191: return u8"┐";
+		case 192: return u8"└";
+		case 193: return u8"┴";
+		case 194: return u8"┬";
+		case 195: return u8"├";
+		case 196: return u8"─";
+		case 197: return u8"┼";
+		case 199: return u8"╟";
+		case 200: return u8"╚";
+		case 201: return u8"╔";
+		case 202: return u8"╩";
+		case 203: return u8"╦";
+		case 204: return u8"╠";
+		case 205: return u8"═";
+		case 206: return u8"╬";
+		case 207: return u8"╧";
+		case 209: return u8"╤";
+		case 215: return u8"╫";
+		case 216: return u8"╪";
+		case 217: return u8"┘";
+		case 218: return u8"┌";
+		default: return nullptr;
+	}
+}
+
 void prt(int i,int j,char c)
 {
-	wmove(win,j,i);
-	wprintw(win, "%lc", L'０' + c);	
+	unsigned char uc=static_cast<unsigned char>(c);
+	style_normal();
+	// Legacy drawing code passes coordinates as (row, col).
+	if(const char* glyph=cp437_box_to_utf8(uc))
+		mvwaddstr(win,i,j,glyph);
+	else
+		mvwaddch(win,i,j,uc);
 	wrefresh(win);
 }
 /******************************************************************/
@@ -1084,7 +1409,7 @@ void prt(int i,int j,char c)
 /******************************************************************/
 void table(int n)
 {
-	wmove(win,28,2);
+	move_xy(28,2);
 	std::cout<<"NAME\t\t\t\t\tSCORE";
 	unsigned char co1=218,co2=191,co3=192,co4=217;
 	unsigned char hr=196,vr=179,cr=197;
@@ -1115,7 +1440,7 @@ void table(int n)
 	prt(3,80,co2);
 	prt(n*2+3,80,co4);
 	prt(n*2+3,1,co3);
-	wmove(win,65,49);
+	move_xy(65,49);
 	std::cout<<"Continue........";
 }
 /**********************************************************************/
@@ -1123,7 +1448,7 @@ void table(int n)
 /**********************************************************************/
 void create(int a[m][m])
 {
-	random();
+	seed_rng_once();
 	int i,j,s[m][m],u,c,pl,gl,p,g,y,k=0;
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
@@ -1200,11 +1525,12 @@ void write(std::fstream &f)
 {
 	sudoku su;
 	char ch='Y';
-	f.open("sudoku.dat",std::ios::binary|std::ios::in);
+	ensure_sudoku_file_layout();
+	f.open(kSudokuFile,std::ios::binary|std::ios::in);
 	f.seekg(0,std::ios::end);
 	long sz=f.tellg()/sizeof(su);
 	f.close();
-	f.open("sudoku.dat",std::ios::binary|std::ios::app);
+	f.open(kSudokuFile,std::ios::binary|std::ios::app);
 	while(ch=='Y')
 	{
 		su.input2(sz+1);
@@ -1221,41 +1547,46 @@ void display2(int a[m][m])
 	int p=30;
 	char c;
 	int i,j;
+	style_normal();
 	for(int i=0;i<m;i++)
 		for(int j=0;j<m;j++)
 		{
-			wmove(win,((j+1)*2)+p,((i+1)*2)+p);
+			move_xy(((j+1)*2)+p,((i+1)*2)+p);
 			////delay(50);
 			if(a[i][j]>9)
 			{
 				c=a[i][j];
 				if(c>='1' && c<='9')
 				{
-					//textcolor(RED);
-					printw("%c",c);
+					style_entry();
+					waddch(win,c);
 				}
 				else
 				{
-					//textcolor(BLUE);
-					printw("%c",c);
+					style_placeholder();
+					waddch(win,c);
 				}
 			}
 			else if(a[i][j]==0)
-				std::cout<<' ';
+			{
+				style_normal();
+				waddch(win,' ');
+			}
 			else
 			{
-				//textcolor(WHITE);
-				printw("%d",a[i][j]);
+				style_normal();
+				wprintw(win,"%d",a[i][j]);
 			}
 		}
-	//textcolor(WHITE);
+	style_normal();
+	wrefresh(win);
 }
 void sudoku::input2(int sz)
 {
 	system("clear");
 	sno=sz;
 	std::cout<<"Serial No.:"<<sno<<std::endl;
-	random();
+	seed_rng_once();
 	level=rand()%5+1;
 	std::cout<<"Level:"<<level;
 	std::cout<<"\nSU-DO-KU:";
